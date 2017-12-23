@@ -487,9 +487,9 @@ bool PandaAnalyzer::PassPreselection() {
   }
 
   float max_puppi = std::max({gt->puppimet, gt->puppiUZmag, gt->puppiUWmag, gt->puppiUAmag});
-  float max_pf = std::max({gt->pfmet, gt->pfUZmag, gt->pfUWmag, gt->pfUAmag});
-  float max_pfUp = std::max({gt->pfmetUp, gt->pfUZmagUp, gt->pfUWmagUp, gt->pfUAmagUp});
-  float max_pfDown = std::max({gt->pfmetDown, gt->pfUZmagDown, gt->pfUWmagDown, gt->pfUAmagDown});
+  float max_pf = std::max({gt->pfmet, gt->pfUZmag, gt->pfUWmag, gt->pfUAmag, gt->pfUWWmag});
+  float max_pfUp = std::max({gt->pfmetUp, gt->pfUZmagUp, gt->pfUWmagUp, gt->pfUAmagUp, gt->pfUWWmagUp});
+  float max_pfDown = std::max({gt->pfmetDown, gt->pfUZmagDown, gt->pfUWmagDown, gt->pfUAmagDown, gt->pfUWWmagDown});
 
   if (preselBits & kRecoil) {
     if ( max_pfDown>200 || max_pf>200 || max_pfUp>200 || max_puppi>200 ) {
@@ -641,7 +641,7 @@ void PandaAnalyzer::RegisterTrigger(TString path, std::vector<unsigned> &idxs) {
 void PandaAnalyzer::Run() {
 
   // INITIALIZE --------------------------------------------------------------------------
-  
+
   unsigned int nEvents = tIn->GetEntries();
   unsigned int nZero = 0;
   if (lastEvent>=0 && lastEvent<(int)nEvents)
@@ -773,6 +773,7 @@ void PandaAnalyzer::Run() {
   bool doMonoH = flags["monohiggs"];
   bool doVBF = flags["vbf"];
   bool doFatjet = flags["fatjet"];
+  
 
   // EVENTLOOP --------------------------------------------------------------------------
   for (iE=nZero; iE!=nEvents; ++iE) {
@@ -950,9 +951,9 @@ void PandaAnalyzer::Run() {
        gt->looseLep1Eta = lep->eta();
        gt->looseLep1Phi = lep->phi();
       } else if (lep_counter==2) {
-       gt->looseLep2Pt = lep->pt();
-       gt->looseLep2Eta = lep->eta();
-       gt->looseLep2Phi = lep->phi();
+	gt->looseLep2Pt = lep->pt();
+	gt->looseLep2Eta = lep->eta();
+	gt->looseLep2Phi = lep->phi();
       } else {
         break;
       }
@@ -960,8 +961,8 @@ void PandaAnalyzer::Run() {
       panda::Muon *mu = dynamic_cast<panda::Muon*>(lep);
       if (mu!=NULL) {
         bool isTight = ( mu->tight &&
-                MuonIsolation(mu->pt(),mu->eta(),mu->combIso(),panda::kTight) &&
-                mu->pt()>20 && fabs(mu->eta())<2.4 );
+			 MuonIsolation(mu->pt(),mu->eta(),mu->combIso(),panda::kTight) &&
+			 mu->pt()>20 && fabs(mu->eta())<2.4 );
         if (lep_counter==1) {
           gt->looseLep1PdgId = mu->charge*-13;
           gt->looseLep1IsHLTSafe = 1;
@@ -984,8 +985,8 @@ void PandaAnalyzer::Run() {
       } else {
         panda::Electron *ele = dynamic_cast<panda::Electron*>(lep);
         bool isTight = ( ele->tight &&
-                /*ElectronIsolation(ele->pt,ele->eta,ele->iso,PElectron::kTight) &&*/
-                ele->pt()>40 && fabs(ele->eta())<2.5 );
+			 /*ElectronIsolation(ele->pt,ele->eta,ele->iso,PElectron::kTight) &&*/
+			 ele->pt()>40 && fabs(ele->eta())<2.5 );
         if (lep_counter==1) {
           gt->looseLep1Pt *= EGMSCALE;
           gt->looseLep1PdgId = ele->charge*-11;
@@ -1028,9 +1029,9 @@ void PandaAnalyzer::Run() {
     } else {
       gt->diLepMass = -1;
     }
-
+    
     tr.TriggerEvent("leptons");
-
+    
     // photons
     std::vector<panda::Photon*> loosePhos;
     for (auto& pho : event.photons) {
@@ -1042,7 +1043,7 @@ void PandaAnalyzer::Run() {
       if (pt<15 || fabs(eta)>2.5)
         continue;
       /*
-      if (IsMatched(&matchEles,0.16,eta,phi))
+	if (IsMatched(&matchEles,0.16,eta,phi))
         continue;
       */
       loosePhos.push_back(&pho);
@@ -1053,14 +1054,14 @@ void PandaAnalyzer::Run() {
         gt->loosePho1Phi = phi;
       }
       if ( pho.medium &&
-        pt>175 /*&& fabs(eta)<1.4442*/ ) { // apply eta cut offline
+	   pt>175 /*&& fabs(eta)<1.4442*/ ) { // apply eta cut offline
         if (gt->nLoosePhoton==1)
           gt->loosePho1IsTight=1;
         gt->nTightPhoton++;
         matchPhos.push_back(&pho);
       }
     }
-
+    
     // TODO - store in a THCorr
     if (isData && gt->nLoosePhoton>0) {
       if (gt->loosePho1Pt>=175 && gt->loosePho1Pt<200)
@@ -1074,16 +1075,16 @@ void PandaAnalyzer::Run() {
       else if (gt->loosePho1Pt>=350)
         gt->sf_phoPurity = 0.02544;
     }
-
+    
     tr.TriggerEvent("photons");
-
+    
     // trigger efficiencies
     gt->sf_eleTrig=1; gt->sf_metTrig=1; gt->sf_phoTrig=1; gt->sf_metTrigZmm=1;
     gt->sf_metTrigVBF=1; gt->sf_metTrigZmmVBF=1;
     if (!isData) {
       gt->sf_metTrig = GetCorr(cTrigMET,gt->pfmetnomu);
       gt->sf_metTrigZmm = GetCorr(cTrigMETZmm,gt->pfmetnomu);
-
+      
       if (gt->nLooseElectron>0 && abs(gt->looseLep1PdgId)==11
           && gt->looseLep1IsTight==1) {
         float eff1=0, eff2=0;
@@ -1105,9 +1106,9 @@ void PandaAnalyzer::Run() {
     TLorentzVector vpfDown; vpfDown.SetPtEtaPhiM(gt->pfmetDown,0,gt->pfmetphi,0);
     TLorentzVector vObj1, vObj2;
     TLorentzVector vpuppiUW, vpuppiUZ, vpuppiUA;
-    TLorentzVector vpfUW, vpfUZ, vpfUA;
+    TLorentzVector vpfUW, vpfUZ, vpfUA, vpfUWW;
     TLorentzVector vpuppiU, vpfU;
-    int whichRecoil = 0; // -1=photon, 0=MET, 1,2=nLep
+    int whichRecoil = 0; // -1=photon, 0=MET, 1,2=nLep, 3 = WW
     if (gt->nLooseLep>0) {
       panda::Lepton *lep1 = looseLeps.at(0);
       vObj1.SetPtEtaPhiM(lep1->pt(),lep1->eta(),lep1->phi(),lep1->m());
@@ -1132,7 +1133,23 @@ void PandaAnalyzer::Run() {
 
         vpuppiU = vpuppiUZ; vpfU = vpfUZ;
         whichRecoil = 2;
-      } else {
+      } else if ( gt->nLooseLep>1 && ( (gt->looseLep1PdgId==11 && gt->looseLep2PdgId==-13) 
+				       || ( gt->looseLep1PdgId==-11 && gt->looseLep2PdgId==13 ) 
+				       || ( gt->looseLep1PdgId==13 && gt->looseLep2PdgId==-11 ) 
+				       || ( gt->looseLep1PdgId==-13 && gt->looseLep2PdgId==11 )  
+				       ) ){
+	// two W with opposite flavor
+	panda::Lepton *lep2 = looseLeps.at(1);
+	vObj2.SetPtEtaPhiM(lep2->pt(),lep2->eta(),lep2->phi(),lep2->m());
+
+        vpfUWW=vpfUW+vObj2; gt->pfUWWmag=vpfUWW.Pt(); gt->pfUWWphi=vpfUWW.Phi();
+
+        TLorentzVector vpfUWWUp = vpfUWUp+vObj2; gt->pfUWWmagUp = vpfUWWUp.Pt();
+        TLorentzVector vpfUWWDown = vpfUWDown+vObj2; gt->pfUWWmagDown = vpfUWWDown.Pt();
+	vpfU = vpfUWW;
+	whichRecoil = 3;
+      }
+      else {
         vpuppiU = vpuppiUW; vpfU = vpfUW;
         whichRecoil = 1;
       }
@@ -1163,7 +1180,28 @@ void PandaAnalyzer::Run() {
     gt->pfUphi = vpfU.Phi();
 
     tr.TriggerEvent("recoils");
-
+    /*
+    std::vector<int> LepIds = {11,13,15,-11,-13,-15};
+    std::vector<int> NeuIds = {12,14,16,-12,-14,-16};
+    std::vector<int> HadIds = {1,2,3,4,5,-1,-2,-3,-4,-5};
+    int nGen = event.genParticles.size();
+    for (int iG=0; iG!=nGen; ++iG) {
+      auto& part(event.genParticles.at(iG));
+      int pdgid = part.pdgid;
+      unsigned int abspdgid = abs(pdgid);
+      bool isLastCopy=true;
+      for (int jG=0; jG!=nGen; ++jG) {
+	if (event.genParticles.at(jG).parent.get() == &part) {
+	  isLastCopy=false;
+	  break;
+	}
+      }
+      if (!isLastCopy)
+	continue;
+    } //looking for targets     
+    
+    tr.TriggerEvent("GenParticle analysis");
+    */
     panda::FatJet *fj1=0;
     gt->nFatjet=0;
     if (doFatjet) {
@@ -1177,15 +1215,15 @@ void PandaAnalyzer::Run() {
         float ptcut = 150;
         if (doMonoH)
           ptcut = 150;
-
+	
         if (pt<ptcut || fabs(eta)>2.4 || !fj.monojet)
           continue;
-
+	
         float phi = fj.phi();
         if (IsMatched(&matchLeps,2.25,eta,phi) || IsMatched(&matchPhos,2.25,eta,phi)) {
           continue;
         }
-
+	
         gt->nFatjet++;
         if (gt->nFatjet==1) {
           fj1 = &fj;
@@ -1375,10 +1413,10 @@ void PandaAnalyzer::Run() {
     tr.TriggerEvent("fatjet");
 
     // first identify interesting jets
-    vector<panda::Jet*> cleanedJets, isoJets, btaggedJets, centralJets;
+    vector<panda::Jet*> cleanedJets, isoJets, btaggedJets, centralJets, forwardJets;
     vector<int> btagindices;
     TLorentzVector vJet;
-    panda::Jet *jet1=0, *jet2=0, *jet3=0;
+    panda::Jet *jet1=0, *jet2=0, *jet3=0, *jet4=0, *jet5=0;
     panda::Jet *jot1=0, *jot2=0;
     panda::Jet *jotUp1=0, *jotUp2=0;
     panda::Jet *jotDown1=0, *jotDown2=0;
@@ -1386,6 +1424,7 @@ void PandaAnalyzer::Run() {
     gt->dphipuppiUW=999; gt->dphipfUW=999;
     gt->dphipuppiUZ=999; gt->dphipfUZ=999;
     gt->dphipuppiUA=999; gt->dphipfUA=999;
+    gt->dphipfUWW=999;
     float maxJetEta = (doVBF) ? 4.7 : 4.5;
     float maxIsoEta = (doMonoH) ? maxJetEta : 2.5;
     unsigned nJetDPhi = (doVBF) ? 4 : 4;
@@ -1458,8 +1497,23 @@ void PandaAnalyzer::Run() {
           gt->jet3Eta = jet.eta();
           gt->jet3Phi = jet.phi();
           gt->jet3CSV = csv;
+	} else if (centralJets.size()==4) {
+	  jet4 = &jet;
+          gt->jet4Pt = jet.pt();
+          gt->jet4Eta = jet.eta();
+          gt->jet4Phi = jet.phi();
+          gt->jet4CSV = csv;
+	} else if (centralJets.size()==5) {
+	  jet5 = &jet;
+          gt->jet5Pt = jet.pt();
+          gt->jet5Eta = jet.eta();
+          gt->jet5Phi = jet.phi();
+          gt->jet5CSV = csv;
 	}
 	
+      }
+      else{
+	forwardJets.push_back(&jet);
       }
 
       if (doMonoH) {
@@ -1482,6 +1536,7 @@ void PandaAnalyzer::Run() {
         gt->dphipfUA = std::min(fabs(vJet.DeltaPhi(vpfUA)),(double)gt->dphipfUA);
         gt->dphipfUW = std::min(fabs(vJet.DeltaPhi(vpfUW)),(double)gt->dphipfUW);
         gt->dphipfUZ = std::min(fabs(vJet.DeltaPhi(vpfUZ)),(double)gt->dphipfUZ);
+	gt->dphipfUWW = std::min(fabs(vJet.DeltaPhi(vpfUWW)),(double)gt->dphipfUWW);
       }
       // btags
       if (csv>0.5426) {
@@ -1570,6 +1625,10 @@ void PandaAnalyzer::Run() {
         gt->dphipuppiU = gt->dphipuppiUZ;
         gt->dphipfU = gt->dphipfUZ;
         break;
+      case 3:
+	//gt->dphipuppiU = gt->dphipuppiUZ;
+        gt->dphipfU = gt->dphipfUWW;
+	break;
       default: // impossible
         break;
     }
@@ -1963,6 +2022,13 @@ void PandaAnalyzer::Run() {
           isIsoJet = true;
         int flavor=0;
         float genpt=0;
+	float PX=0;
+	float PY=0;
+	float PZ=0;
+	float EN=0;
+	int ID=0;
+	int status=0;
+	float MASS=0;
         for (auto& gen : event.genParticles) {
           int apdgid = abs(gen.pdgid);
           if (apdgid==0 || (apdgid>5 && apdgid!=21)) // light quark or gluon
@@ -1970,8 +2036,15 @@ void PandaAnalyzer::Run() {
           double dr2 = DeltaR2(jet->eta(),jet->phi(),gen.eta(),gen.phi());
           if (dr2<0.09) {
             genpt = gen.pt();
+	    PX = gen.px();
+	    PY = gen.py();
+	    PZ = gen.pz();
+	    EN = gen.e();
+	    //status = gen.status();
+	    ID = gen.pdgid;
+	    MASS = gen.m();
             if (apdgid==4 || apdgid==5) {
-              flavor=apdgid;
+              flavor=apdgid; //flavor variable strictly for btag usage, to get pdgid of genparticle, refer to XXGenFlav
               break;
             } else {
               flavor=0;
@@ -1993,13 +2066,56 @@ void PandaAnalyzer::Run() {
         if (jet==centralJets.at(0)) {
           gt->jet1Flav = flavor;
           gt->jet1GenPt = genpt;
+	  //Gen level of jets
+	  gt->jet1GenPx = PX;
+	  gt->jet1GenPy = PY;
+	  gt->jet1GenPz = PZ;
+	  gt->jet1GenEn = EN;
+	  //gt->genjet1status = status;
+	  gt->jet1GenFlav = ID;
+	  gt->jet1GenMass = MASS;
         } else if (jet==centralJets.at(1)) {
           gt->jet2Flav = flavor;
           gt->jet2GenPt = genpt;
+	  gt->jet2GenPx = PX;
+          gt->jet2GenPy = PY;
+          gt->jet2GenPz = PZ;
+          gt->jet2GenEn = EN;
+          //gt->genjet2status = status;
+          gt->jet2GenFlav = ID;
+	  gt->jet2GenMass = MASS;
+
         }else if (jet==centralJets.at(2)) {
 	  gt->jet3Flav = flavor;
           gt->jet3GenPt = genpt;
+	  gt->jet3GenPx = PX;
+          gt->jet3GenPy = PY;
+          gt->jet3GenPz = PZ;
+          gt->jet3GenEn = EN;
+          //gt->genjet3status = status;
+          gt->jet3GenFlav = ID;
+	  gt->jet3GenMass = MASS;
+	}else if (jet==centralJets.at(3)) {
+	  gt->jet4Flav = flavor;
+          gt->jet4GenPt = genpt;
+	  gt->jet4GenPx = PX;
+          gt->jet4GenPy = PY;
+          gt->jet4GenPz = PZ;
+          gt->jet4GenEn = EN;
+	  gt->jet4GenFlav = ID;
+	  gt->jet4GenMass = MASS;
+	}else if (jet==centralJets.at(4)) {
+	  gt->jet5Flav = flavor;
+          gt->jet5GenPt = genpt;
+	  gt->jet5GenPx = PX;
+          gt->jet5GenPy = PY;
+          gt->jet5GenPz = PZ;
+          gt->jet5GenEn = EN;
+	  gt->jet5GenFlav = ID;
+	  gt->jet5GenMass = MASS;
 	}
+
+
         if (isIsoJet) {
           if (jet==isoJets.at(0))
             gt->isojet1Flav = flavor;
@@ -2024,7 +2140,7 @@ void PandaAnalyzer::Run() {
 	// I AM ENABLING THIS PART
         if (doMonoH){
           // alternate stuff for inclusive jet collection (also different b tagging WP)
-	  std::cout<<"B-tagging Medium SF evaluating"<<std::endl;
+	  //std::cout<<"B-tagging Medium SF evaluating"<<std::endl;
           double sf_alt(1),sfUp_alt(1),sfDown_alt(1);
 
 	  //Calculating medium working point SF
@@ -2043,7 +2159,36 @@ void PandaAnalyzer::Run() {
 	}
         
       } // loop over jets
+      /*
+      // Loop over forward jet, eta> 2.5
+      unsigned int nFJ = forwardJets.size();
+      if ( nFJ > 2 ){
+	for (unsigned int iFJ=0; iFJ!=nFJ; ++iFJ) {
+	  panda::Jet *iforwardjet = centralJets.at(iFJ);
 
+	  TLorentzVector forwardjet1(0.,0.,0.,0.);
+	  forwardjet1.SetPxPyPzE(iforwardjet->px(),iforwardjet->py(),iforwardjet->pz(),iforwardjet->e());
+	  for (unsigned int jFJ=1; jFJ!=nFJ; ++jFJ) {
+	    if (iFJ==jFJ) continue;
+	    panda::Jet *jforwardjet = centralJets.at(jFJ);
+	    TLorentzVector forwardjet2(0.,0.,0.,0.);
+	    forwardjet2.SetPxPyPzE(jforwardjet->px(),jforwardjet->py(),jforwardjet->pz(),jforwardjet->e());
+	  
+	    double dijetmass = (forwardjet1+forwardjet2).M();
+	    double deltaeta = iforwardjet->eta() - jforwardjet->eta();
+	    if (deltaeta > 4.2 && dijetmass>800 ){
+	      gt->forwjet1Pt = iforwardjet->pt();
+	      gt->forwjet1Phi = iforwardjet->phi();
+	      gt->forwjet1Eta = iforwardjet->eta();
+	      gt->forwjet2Pt = jforwardjet->pt();
+	      gt->forwjet2Phi = jforwardjet->phi();
+	      gt->forwjet2Eta = jforwardjet->eta();
+	      break;
+	    }
+	  }
+	} // loop over forward jet
+      }
+      */
       //ENABLE 2-btag SF 
       // isojet with Low working points
       EvalBTagSF(btagcands,sf_cent,GeneralTree::bCent,GeneralTree::bJet,false);
@@ -2157,6 +2302,7 @@ void PandaAnalyzer::Run() {
     if (!isData) {
       bool found = processType!=kA && processType!=kZ && processType!=kW
                      && processType!=kZEWK && processType!=kWEWK;
+      //gen info of boson stored according to pdgid
       int target=24;
       if (processType==kZ || processType==kZEWK) target=23;
       if (processType==kA) target=22;
@@ -2164,9 +2310,17 @@ void PandaAnalyzer::Run() {
       for (auto& gen : event.genParticles) {
         if (found) break;
         int apdgid = abs(gen.pdgid);
+	float PX = gen.px();
+	float PY = gen.py();
+	float PZ = gen.pz();
+	float EN = gen.e();
+	int status = 0;
+	int ID = gen.pdgid;
+	float MASS = gen.m();
         if (apdgid==target)     {
           bool foundChild = false;
           for (auto& child : event.genParticles) {
+
             if (abs(child.pdgid) != target)
               continue;
             if (child.parent.isValid() && child.parent.get() == &(gen)) {
@@ -2179,6 +2333,12 @@ void PandaAnalyzer::Run() {
           if (processType==kZ) {
             gt->trueGenBosonPt = gen.pt();
             gt->genBosonPt = bound(gen.pt(),genBosonPtMin,genBosonPtMax);
+	    gt->genBosonGenPx= PX;
+	    gt->genBosonGenPy= PY;
+	    gt->genBosonGenPz= PZ;
+	    gt->genBosonGenEn= EN;
+	    gt->genBosonGenFlav = ID;
+	    gt->genBosonGenMass = MASS;
             gt->sf_qcdV = GetCorr(cZNLO,gt->genBosonPt);
             gt->sf_ewkV = GetCorr(cZEWK,gt->genBosonPt);
             gt->sf_qcdV_VBF = GetCorr(cVBF_ZNLO,gt->genBosonPt) * gt->sf_qcdV;
@@ -2187,6 +2347,12 @@ void PandaAnalyzer::Run() {
           } else if (processType==kW) {
             gt->trueGenBosonPt = gen.pt();
             gt->genBosonPt = bound(gen.pt(),genBosonPtMin,genBosonPtMax);
+	    gt->genBosonGenPx= PX;
+            gt->genBosonGenPy= PY;
+            gt->genBosonGenPz= PZ;
+            gt->genBosonGenEn= EN;
+            gt->genBosonGenFlav = ID;
+	    gt->genBosonGenMass = MASS;
             gt->sf_qcdV = GetCorr(cWNLO,gt->genBosonPt);
             gt->sf_ewkV = GetCorr(cWEWK,gt->genBosonPt);
             gt->sf_qcdV_VBF = GetCorr(cVBF_WNLO,gt->genBosonPt) * gt->sf_qcdV;
@@ -2195,11 +2361,23 @@ void PandaAnalyzer::Run() {
           } else if (processType==kZEWK) {
             gt->trueGenBosonPt = gen.pt();
             gt->genBosonPt = bound(gen.pt(),genBosonPtMin,genBosonPtMax);
+	    gt->genBosonGenPx= PX;
+            gt->genBosonGenPy= PY;
+            gt->genBosonGenPz= PZ;
+            gt->genBosonGenEn= EN;
+            gt->genBosonGenFlav = ID;
+	    gt->genBosonGenMass = MASS;
             gt->sf_qcdV_VBF = GetCorr(cVBF_EWKZ,gt->genBosonPt,gt->jot12Mass);
             gt->sf_qcdV_VBFTight = gt->sf_qcdV_VBF; // for consistency
           } else if (processType==kWEWK) {
             gt->trueGenBosonPt = gen.pt();
             gt->genBosonPt = bound(gen.pt(),genBosonPtMin,genBosonPtMax);
+	    gt->genBosonGenPx= PX;
+            gt->genBosonGenPy= PY;
+            gt->genBosonGenPz= PZ;
+            //gt->genBosonGenEn= EN;
+            gt->genBosonGenFlav = ID;
+	    gt->genBosonGenMass = MASS;
             gt->sf_qcdV_VBF = GetCorr(cVBF_EWKW,gt->genBosonPt,gt->jot12Mass);
             gt->sf_qcdV_VBFTight = gt->sf_qcdV_VBF; // for consistency
           } else if (processType==kA) {
@@ -2207,6 +2385,12 @@ void PandaAnalyzer::Run() {
             if (gen.pt() > gt->trueGenBosonPt) {
               gt->trueGenBosonPt = gen.pt();
               gt->genBosonPt = bound(gen.pt(),genBosonPtMin,genBosonPtMax);
+	      gt->genBosonGenPx= PX;
+	      gt->genBosonGenPy= PY;
+	      gt->genBosonGenPz= PZ;
+	      gt->genBosonGenEn= EN;
+	      gt->genBosonGenFlav = ID;
+	      gt->genBosonGenMass = MASS;
               gt->sf_qcdV = GetCorr(cANLO,gt->genBosonPt);
               gt->sf_ewkV = GetCorr(cAEWK,gt->genBosonPt);
               gt->sf_qcdV2j = GetCorr(cANLO2j,gt->genBosonPt);
@@ -2331,7 +2515,7 @@ void PandaAnalyzer::Run() {
     }
 
     gt->Fill();
-
+    
   } // entry loop
 
   if (DEBUG) { PDebug("PandaAnalyzer::Run","Done with entry loop"); }

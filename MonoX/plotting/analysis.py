@@ -2,13 +2,13 @@
 
 from os import system,getenv
 from sys import argv
-import argparse
+import argparse,sys
 
 ### SET GLOBAL VARIABLES ###
 baseDir = getenv('PANDA_FLATDIR')+'/' 
 dataDir = baseDir#.replace('0_4','0_4_egfix')
 parser = argparse.ArgumentParser(description='plot stuff')
-parser.add_argument('--outdir',metavar='outdir',type=str,default=None)
+parser.add_argument('--outdir',metavar='outdir',type=str,default='.')
 parser.add_argument('--cut',metavar='cut',type=str,default='1==1')
 parser.add_argument('--region',metavar='region',type=str,default=None)
 parser.add_argument('--tt',metavar='tt',type=str,default='')
@@ -29,9 +29,12 @@ import PandaCore.Tools.Functions
 #import PandaAnalysis.Monotop.LooseSelection as sel
 #import PandaAnalysis.Monotop.TightSelection as sel
 #import PandaAnalysis.Monotop.OneFatJetSelection as sel
-import PandaAnalysis.Monotop.CombinedBVetoSelection as sel
-#import PandaAnalysis.Monotop.TestSelection as sel
+#import PandaAnalysis.Monotop.CombinedBVetoSelection as sel
+import PandaAnalysis.MonoX.Selection_bb as sel
+#import PandaAnalysis.MonoX.MonoXSelection as sel                                                                                                                                                         
 from PandaCore.Drawers.plot_utility import *
+
+#reload(sys.modules['plot_utility'])
 
 ### DEFINE REGIONS ###
 
@@ -67,8 +70,8 @@ if args.bdtcut:
 if args.masscut:
     plot.AddPlotLabel('%i < m_{SD} < 210 GeV'%(int(args.masscut)),.18,.7,False,42,.04)
 
-#PInfo('cut',plot.cut)
-#PInfo('weight',plot.mc_weight)
+PInfo('cut',plot.cut)
+PInfo('weight',plot.mc_weight)
 
 #plot.add_systematic('QCD scale','scaleUp','scaleDown',root.kRed+2)
 #plot.add_systematic('PDF','pdfUp','pdfDown',root.kBlue+2)
@@ -86,7 +89,9 @@ gjets         = Process('#gamma+jets',root.kGjets)
 data          = Process("Data",root.kData)
 signal        = Process('m_{V}=1.75 TeV, m_{#chi}=1 GeV',root.kSignal)
 #processes = [qcd,diboson,singletop,ttbar,wewk,zewk,wjets,zjets]
+#processes = [qcd,diboson,singletop,wjets,ttbar,zjets]
 processes = [qcd,diboson,singletop,wjets,ttbar,zjets]
+
 if 'qcd' in region:
     processes = [diboson,singletop,wjets,ttbar,zjets,qcd]
 
@@ -101,8 +106,8 @@ wjets.add_file(baseDir+'WJets.root')
 diboson.add_file(baseDir+'Diboson.root')
 ttbar.add_file(baseDir+'TTbar%s.root'%(args.tt));
 singletop.add_file(baseDir+'SingleTop.root')
-ttg.add_file(baseDir+'TTbar_Photon.root');
-singletopg.add_file(baseDir+'SingleTop_tG.root')
+#ttg.add_file(baseDir+'TTbar_Photon.root');
+#singletopg.add_file(baseDir+'SingleTop_tG.root')
 if 'pho' in region:
     #processes = [qcd,singletopg,ttg,gjets]
     processes = [qcd,gjets]
@@ -132,6 +137,11 @@ elif 'electron' in region:
 elif region=='photon':
     data.additional_cut = sel.triggers['pho']
     data.add_file(dataDir+'SinglePhoton.root')
+elif region=='ZmmCR':
+    data.additional_cut = sel.triggers['met']
+    print dataDir+'MET.root'
+    data.add_file(dataDir+'MET.root')
+    lep='#mu'
 
 
 processes.append(data)
@@ -160,21 +170,29 @@ elif region=='photon':
     recoil=VDistribution("pfUAmag",recoilBins,"PF U(#gamma) [GeV]","Events/GeV")
     plot.add_distribution(FDistribution('loosePho1Pt',0,1000,20,'Leading #gamma p_{T} [GeV]','Events/40 GeV'))
     plot.add_distribution(FDistribution('loosePho1Eta',-2.5,2.5,20,'Leading #gamma #eta','Events/bin'))
+elif region=='ZmmCR':
+    recoil=VDistribution("pfUZmag",recoilBins,"PF U(%s%s) [GeV]"%(lep,lep),"Events/GeV")
+    plot.add_distribution(FDistribution('diLepMass',60,120,20,'m_{ll} [GeV]','Events/3 GeV'))
+    #plot.add_distribution(FDistribution('looseLep1Pt',0,1000,20,'Leading %s p_{T} [GeV]'%lep,'Events/40 GeV'))
+    #plot.add_distribution(FDistribution('looseLep1Eta',-2.5,2.5,20,'Leading %s #eta'%lep,'Events/bin'))
+    #plot.add_distribution(FDistribution('looseLep2Pt',0,1000,20,'Subleading %s p_{T} [GeV]'%lep,'Events/40 GeV'))
+    #plot.add_distribution(FDistribution('looseLep2Eta',-2.5,2.5,20,'Subleading %s #eta'%lep,'Events/bin'))
+
 
 #recoil.calc_chi2 = True
-plot.add_distribution(recoil)
+#plot.add_distribution(recoil)
 
-plot.add_distribution(FDistribution('nJet',0.5,8.5,8,'N_{jet}','Events'))
-plot.add_distribution(FDistribution('npv',0,45,45,'N_{PV}','Events'))
-plot.add_distribution(FDistribution('fj1MSD',50,250,10,'fatjet m_{SD} [GeV]','Events'))
-plot.add_distribution(FDistribution('fj1Pt',200,1000,20,'fatjet p_{T} [GeV]','Events'))
-plot.add_distribution(FDistribution('top_ecf_bdt',-1,1,20,'Top BDT','Events'))
-plot.add_distribution(FDistribution('fj1MaxCSV',0,1,20,'fatjet max CSV','Events'))
-plot.add_distribution(FDistribution('fj1Tau32',0,1,20,'fatjet #tau_{32}','Events'))
-plot.add_distribution(FDistribution('fj1Tau32SD',0,1,20,'fatjet #tau_{32}^{SD}','Events'))
-plot.add_distribution(FDistribution('jet1CSV',0,1,20,'jet 1 CSV','Events',filename='jet1CSV'))
-plot.add_distribution(FDistribution('dphipfmet',0,3.14,20,'min#Delta#phi(jet,E_{T}^{miss})','Events'))
-plot.add_distribution(FDistribution("1",0,2,1,"dummy","dummy"))
+#plot.add_distribution(FDistribution('nJet',0.5,8.5,8,'N_{jet}','Events'))
+#plot.add_distribution(FDistribution('npv',0,45,45,'N_{PV}','Events'))
+#plot.add_distribution(FDistribution('fj1MSD',50,250,10,'fatjet m_{SD} [GeV]','Events'))
+#plot.add_distribution(FDistribution('fj1Pt',200,1000,20,'fatjet p_{T} [GeV]','Events'))
+#plot.add_distribution(FDistribution('top_ecf_bdt',-1,1,20,'Top BDT','Events'))
+#plot.add_distribution(FDistribution('fj1MaxCSV',0,1,20,'fatjet max CSV','Events'))
+#plot.add_distribution(FDistribution('fj1Tau32',0,1,20,'fatjet #tau_{32}','Events'))
+#plot.add_distribution(FDistribution('fj1Tau32SD',0,1,20,'fatjet #tau_{32}^{SD}','Events'))
+#plot.add_distribution(FDistribution('jet1CSV',0,1,20,'jet 1 CSV','Events',filename='jet1CSV'))
+#plot.add_distribution(FDistribution('dphipfmet',0,3.14,20,'min#Delta#phi(jet,E_{T}^{miss})','Events'))
+#plot.add_distribution(FDistribution("1",0,2,1,"dummy","dummy"))
 
 ### DRAW AND CATALOGUE ###
 if args.bdtcut:

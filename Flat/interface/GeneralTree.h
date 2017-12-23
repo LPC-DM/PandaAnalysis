@@ -201,10 +201,12 @@ class GeneralTree : public genericTree {
     float pfUWmagUp = -1;
     float pfUZmagUp = -1;
     float pfUAmagUp = -1;
+    float pfUWWmagUp = -1;
     float pfUmagUp = -1;
     float pfUWmagDown = -1;
     float pfUZmagDown = -1;
     float pfUAmagDown = -1;
+    float pfUWWmagDown = -1;
     float pfUmagDown = -1;
     int nJot = -1;
     float jot1Phi = -1;
@@ -278,6 +280,8 @@ class GeneralTree : public genericTree {
     float pfUZphi = -1;
     float pfUAmag = -1;
     float pfUAphi = -1;
+    float pfUWWmag = -1;
+    float pfUWWphi = -1;
     float pfUperp = -1;
     float pfUpara = -1;
     float pfUmag = -1;
@@ -290,6 +294,7 @@ class GeneralTree : public genericTree {
     float dphipfUW = -1;
     float dphipfUZ = -1;
     float dphipfUA = -1;
+    float dphipfUWW = -1;
     float dphipuppiU = -1;
     float dphipfU = -1;
     float trueGenBosonPt = -1;
@@ -297,6 +302,14 @@ class GeneralTree : public genericTree {
     float genBosonEta = -1;
     float genBosonMass = -1;
     float genBosonPhi = -1;
+
+    float genBosonGenPx = -1;
+    float genBosonGenPy = -1;
+    float genBosonGenPz = -1;
+    float genBosonGenEn = -1;
+    int genBosonGenFlav = -1;
+    float genBosonGenMass = -1;
+
     float genWPlusPt = -1;
     float genWMinusPt = -1;
     float genWPlusEta = -1;
@@ -330,6 +343,67 @@ class GeneralTree : public genericTree {
     float jet3GenPt = -1;
     float jet3Eta = -1;
     float jet3CSV = -1;
+    int jet4Flav = -1;
+    float jet4Phi = -1;
+    float jet4Pt = -1;
+    float jet4GenPt = -1;
+    float jet4Eta = -1;
+    float jet4CSV = -1;
+    int jet5Flav = -1;
+    float jet5Phi = -1;
+    float jet5Pt = -1;
+    float jet5GenPt = -1;
+    float jet5Eta = -1;
+    float jet5CSV = -1;
+    float forwjet1Pt = -1;
+    float forwjet1Phi = -1;
+    float forwjet1Eta = -1;
+    //float forwjet1GenPt = -1;
+    float forwjet2Pt = -1;
+    float forwjet2Phi =-1;
+    float forwjet2Eta =-1;
+    //float forwjet2GenPt= -1;
+    //Gen Info
+    float jet1GenPx=0;
+    float jet1GenPy=0;
+    float jet1GenPz=0;
+    float jet1GenEn=0;
+    int jet1GenStatus=0;
+    int jet1GenFlav=0;
+    float jet1GenMass=0;
+
+    float jet2GenPx=0;
+    float jet2GenPy=0;
+    float jet2GenPz=0;
+    float jet2GenEn=0;
+    int jet2GenStatus=0;
+    int jet2GenFlav=0;
+    float jet2GenMass=0;
+
+    float jet3GenPx=0;
+    float jet3GenPy=0;
+    float jet3GenPz=0;
+    float jet3GenEn=0;
+    int jet3GenStatus=0;
+    int jet3GenFlav=0;
+    float jet3GenMass=0;
+
+    float jet4GenPx=0;
+    float jet4GenPy=0;
+    float jet4GenPz=0;
+    float jet4GenEn=0;
+    int jet4GenStatus=0;
+    int jet4GenFlav=0;
+    float jet4GenMass=0;
+
+    float jet5GenPx=0;
+    float jet5GenPy=0;
+    float jet5GenPz=0;
+    float jet5GenEn=0;
+    int jet5GenStatus=0;
+    int jet5GenFlav=0;
+    float jet5GenMass=0;
+
     float isojet1Pt = -1;
     float isojet1CSV = -1;
     int isojet1Flav = -1;

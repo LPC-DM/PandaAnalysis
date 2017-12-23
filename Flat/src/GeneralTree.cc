@@ -137,10 +137,12 @@ void GeneralTree::Reset() {
     pfmetDown = -1;
     pfUWmagUp = -1;
     pfUZmagUp = -1;
+    pfUWWmagUp = -1;
     pfUAmagUp = -1;
     pfUmagUp = -1;
     pfUWmagDown = -1;
     pfUZmagDown = -1;
+    pfUWWmagDown = -1;
     pfUAmagDown = -1;
     pfUmagDown = -1;
     nJot = 0;
@@ -213,6 +215,8 @@ void GeneralTree::Reset() {
     pfUWphi = -1;
     pfUZmag = -1;
     pfUZphi = -1;
+    pfUWWmag = -1;
+    pfUWWphi = -1;
     pfUAmag = -1;
     pfUAphi = -1;
     pfUperp = -1;
@@ -226,6 +230,7 @@ void GeneralTree::Reset() {
     dphipuppiUA = -1;
     dphipfUW = -1;
     dphipfUZ = -1;
+    dphipfUWW = -1;
     dphipfUA = -1;
     dphipuppiU = -1;
     dphipfU = -1;
@@ -406,10 +411,12 @@ void GeneralTree::WriteTree(TTree *t) {
     Book("pfmetDown",&pfmetDown,"pfmetDown/F");
     Book("pfUWmagUp",&pfUWmagUp,"pfUWmagUp/F");
     Book("pfUZmagUp",&pfUZmagUp,"pfUZmagUp/F");
+    Book("pfUWWmagUp",&pfUWWmagUp,"pfUWWmagUp/F");
     Book("pfUAmagUp",&pfUAmagUp,"pfUAmagUp/F");
     Book("pfUmagUp",&pfUmagUp,"pfUmagUp/F");
     Book("pfUWmagDown",&pfUWmagDown,"pfUWmagDown/F");
     Book("pfUZmagDown",&pfUZmagDown,"pfUZmagDown/F");
+    Book("pfUWWmagDown",&pfUWWmagDown,"pfUWWmagDown/F");
     Book("pfUAmagDown",&pfUAmagDown,"pfUAmagDown/F");
     Book("pfUmagDown",&pfUmagDown,"pfUmagDown/F");
     Book("jot1EtaUp",&jot1EtaUp,"jot1EtaUp/F");
@@ -520,6 +527,8 @@ void GeneralTree::WriteTree(TTree *t) {
     Book("pfUWphi",&pfUWphi,"pfUWphi/F");
     Book("pfUZmag",&pfUZmag,"pfUZmag/F");
     Book("pfUZphi",&pfUZphi,"pfUZphi/F");
+    Book("pfUWWmag",&pfUWWmag,"pfUWWmag/F");
+    Book("pfUWWphi",&pfUWWphi,"pfUWWphi/F");
     Book("pfUAmag",&pfUAmag,"pfUAmag/F");
     Book("pfUAphi",&pfUAphi,"pfUAphi/F");
     Book("pfUperp",&pfUperp,"pfUperp/F");
@@ -532,6 +541,7 @@ void GeneralTree::WriteTree(TTree *t) {
     Book("dphipuppiUZ",&dphipuppiUZ,"dphipuppiUZ/F");
     Book("dphipuppiUA",&dphipuppiUA,"dphipuppiUA/F");
     Book("dphipfUW",&dphipfUW,"dphipfUW/F");
+    Book("dphipfUWW",&dphipfUWW,"dphipfUWW/F");
     Book("dphipfUZ",&dphipfUZ,"dphipfUZ/F");
     Book("dphipfUA",&dphipfUA,"dphipfUA/F");
     Book("dphipuppiU",&dphipuppiU,"dphipuppiU/F");

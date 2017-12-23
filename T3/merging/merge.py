@@ -31,6 +31,7 @@ system('mkdir -p /uscmst1b_scratch/lpc1/3DayLifetime/%s/split'%user) # tmp dir
 system('mkdir -p /uscmst1b_scratch/lpc1/3DayLifetime/%s/merged'%user) # tmp dir
 
 inbase = environ['SUBMIT_OUTDIR']
+#inbase ="/eos/uscms/store/user/shoh/miniaod/Vector_Zprime_NLO_Mphi-1000_Mchi-300_gSM-0p25_gDM-1p0_13TeV-madgraph/"
 #inbase  ='root://cmseos.fnal.gov/'+ inbase1.split('/eos/uscms')[1]
 outbase = environ['PANDA_FLATDIR']
 
@@ -88,12 +89,13 @@ def merge(shortnames,mergedname):
         elif 'Vector' in shortname:
             tmp_ = shortname
             replacements = {
-                'Vector_MonoTop_NLO_Mphi-':'',
+                'Vector_Zprime_NLO_Mphi-':'',
                 '_gSM-0p25_gDM-1p0_13TeV-madgraph':'',
                 '_Mchi-':'_',
                 }
             for k,v in replacements.iteritems():
                 tmp_ = tmp_.replace(k,v)
+            print "tmp_= ", tmp_
             m_V,m_DM = [int(x) for x in tmp_.split('_')]
             params = read_nr_model(m_V,m_DM)
             if params:
