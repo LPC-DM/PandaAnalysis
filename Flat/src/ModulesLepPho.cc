@@ -31,6 +31,8 @@ void PandaAnalyzer::SimpleLeptons() {
     if (isMedium) eleSelBit |= kMedium;
     if (isTight ) eleSelBit |= kTight;
     if (isDxyz  ) eleSelBit |= kDxyz;
+    if (ele.mvaWP90) eleSelBit |= kEleMvaWP90;
+    if (ele.mvaWP80) eleSelBit |= kEleMvaWP80;
     gt->electronPt[iL]           = pt;
     gt->electronEta[iL]          = eta;
     gt->electronPhi[iL]          = ele.phi();
@@ -129,20 +131,43 @@ void PandaAnalyzer::ComplicatedLeptons() {
   looseLep1PdgId=-1, looseLep2PdgId=-1, looseLep3PdgId=-1, looseLep4PdgId=-1;
   for (auto& ele : event.electrons) {
     float pt = ele.smearedPt; float eta = ele.eta(); float aeta = fabs(eta);
-    if (pt<10 || aeta>2.5 /* || (aeta>1.4442 && aeta<1.566) */) continue;
-    if (!ele.veto) continue;
+    if (analysis->hbb) {
+      if (pt<7 || aeta>2.4 || fabs(ele.dxy)>0.05 || fabs(ele.dz)>0.2 || ele.combIso()/pt>0.4) continue;
+    } else {
+      if (pt<10 || aeta>2.5 || !ele.veto) continue;
+    }
     ele.setPtEtaPhiM(pt,eta,ele.phi(),511e-6);
     unsigned iL=gt->nLooseElectron;
     bool isFake   = ele.hltsafe;
     bool isMedium = ele.medium;
     bool isTight  = ele.tight;
     bool isDxyz   = ElectronIP(ele.eta(),ele.dxy,ele.dz);
+    bool eleMVAPresel = 
+      pt > 15 && ((
+        aeta < 1.4442 && 
+        ele.sieie < 0.012 && 
+        ele.hOverE < 0.09 &&
+        ele.ecalIso/pt < 0.4 && 
+        ele.hcalIso/pt < 0.25 && 
+        ele.trackIso/pt < 0.18 &&
+        fabs(ele.dEtaInSeed) < 0.0095 && 
+        fabs(ele.dPhiIn) < 0.065
+      ) || (
+        aeta > 1.5660 && 
+        ele.sieie < 0.033 && 
+        ele.hOverE < 0.09 &&
+        ele.ecalIso/pt < 0.45 && 
+        ele.hcalIso/pt < 0.28 &&
+        ele.trackIso/pt < 0.18
+    ));
     if (isTight) gt->nTightElectron++;
     int eleSelBit            = kLoose;
     if (isFake  ) eleSelBit |= kFake;
     if (isMedium) eleSelBit |= kMedium;
     if (isTight ) eleSelBit |= kTight;
     if (isDxyz  ) eleSelBit |= kDxyz;
+    if (ele.mvaWP90 && eleMVAPresel) eleSelBit |= kEleMvaWP90;
+    if (ele.mvaWP80 && eleMVAPresel) eleSelBit |= kEleMvaWP80;
     gt->electronPt[iL]           = pt;
     gt->electronEta[iL]          = eta;
     gt->electronPhi[iL]          = ele.phi();
@@ -151,6 +176,8 @@ void PandaAnalyzer::ComplicatedLeptons() {
     gt->electronSfLoose[iL]      = GetCorr(cEleLoose, eta, pt);
     gt->electronSfMedium[iL]     = GetCorr(cEleMedium, eta, pt);
     gt->electronSfTight[iL]      = GetCorr(cEleTight, eta, pt);
+    gt->electronSfMvaWP90[iL]      = GetCorr(cEleMvaWP90, eta, pt);
+    gt->electronSfMvaWP80[iL]      = GetCorr(cEleMvaWP80, eta, pt);
     gt->electronSfUnc[iL]        = GetError(cEleMedium, eta, pt);
     gt->electronSfReco[iL]       = GetCorr(cEleReco, eta, pt);
     gt->electronSelBit[iL]       = eleSelBit;
@@ -170,21 +197,22 @@ void PandaAnalyzer::ComplicatedLeptons() {
     //gt->electronHOverE[iL]       = ele.hOverE;
     //gt->electronEcalE[iL]        = ele.ecalE;
     //gt->electronTrackP[iL]       = ele.trackP;
-    //gt->electronNMissingHits[iL] = ele.nMissingHits;
+    gt->electronNMissingHits[iL] = ele.nMissingHits;
     gt->electronTripleCharge[iL] = ele.tripleCharge;
     gt->electronCombIso[iL] = ele.combIso();
     looseLeps.push_back(&ele);
     matchLeps.push_back(&ele);
     matchEles.push_back(&ele);
-    gt->nLooseElectron++;
+    // WARNING: The definition of "loose" here may not match your analysis definition of a loose electron for lepton multiplicity or jet cleaning considerations.
+    // It is the user's responsibility to make sure he is cutting on the correct multiplicity. Enough information is provided to do this downstream.
+    gt->nLooseElectron++; 
     if (gt->nLooseElectron>=NLEP) break;
-
   }
 
   // muons
   for (auto& mu : event.muons) {
     float pt = mu.pt(); float eta = mu.eta(); float aeta = fabs(eta);
-    if (pt<5 || aeta>2.4) continue;
+    if (pt<2 || aeta>2.4) continue;
     double ptCorrection=1;
     if (isData) { // perform the rochester correction on the actual particle
       ptCorrection=rochesterCorrection->kScaleDT((int)mu.charge, pt, eta, mu.phi(), 0, 0);
@@ -205,10 +233,13 @@ void PandaAnalyzer::ComplicatedLeptons() {
         double random1=rng.Rndm(); double random2=rng.Rndm();
         ptCorrection=rochesterCorrection->kScaleAndSmearMC((int)mu.charge, pt, eta, mu.phi(), mu.trkLayersWithMmt, random1, random2, 0, 0);
       }
-      pt *= ptCorrection;
-    } 
-    if (pt<10 || aeta>2.4) continue;
-    if (!mu.loose) continue;
+    }
+    pt *= ptCorrection;
+    if (analysis->hbb) {
+      if (pt<5 || aeta>2.4 || !mu.loose || fabs(mu.dxy)>0.5 || fabs(mu.dz)>1.0 || mu.combIso()/pt>0.4) continue;
+    } else {
+      if (pt<10 || aeta>2.4 || !mu.loose) continue;
+    }
     mu.setPtEtaPhiM(pt,eta,mu.phi(),0.106);
     bool isFake   = mu.tight  && mu.combIso()/mu.pt() < 0.4 && mu.chIso/mu.pt() < 0.4;
     bool isMedium = mu.medium && mu.combIso()/mu.pt() < 0.15;
@@ -251,6 +282,8 @@ void PandaAnalyzer::ComplicatedLeptons() {
     matchLeps.push_back(&mu);
     TVector2 vMu; vMu.SetMagPhi(pt,mu.phi());
     vMETNoMu += vMu;
+    // WARNING: The definition of "loose" here may not match your analysis definition of a loose muon for lepton multiplicity or jet cleaning considerations.
+    // It is the user's responsibility to make sure he is cutting on the correct multiplicity. Enough information is provided to do this downstream.
     gt->nLooseMuon++;
     if (gt->nLooseMuon>=NLEP) break;
   }
@@ -289,10 +322,10 @@ void PandaAnalyzer::ComplicatedLeptons() {
     gt->diLepMass = -1;
   }
 
-  tr->TriggerEvent("leptons");
+  tr->TriggerEvent("complicated leptons");
 }
 
-void PandaAnalyzer::Photons()
+void PandaAnalyzer::SimplePhotons()
 {
     for (auto& pho : event.photons) {
       if (!pho.loose || !pho.csafeVeto)
@@ -335,29 +368,104 @@ void PandaAnalyzer::Photons()
     tr->TriggerEvent("photons");
 }
 
-void PandaAnalyzer::Taus()
+void PandaAnalyzer::ComplicatedPhotons()
 {
-
-    for (auto& tau : event.taus) {
-      if (analysis->vbf) {
-        if (!tau.decayMode || !tau.decayModeNew)
-          continue;
-        if (!tau.looseIsoMVAOld)
-          continue;
-      } else {
-        if (!tau.decayMode || !tau.decayModeNew)
-          continue;
-        if (!tau.looseIsoMVA)
-          continue;
+    for (auto& pho : event.photons) {
+      if (!pho.medium)
+        continue;
+      float pt = pho.pt() * EGMSCALE;
+      if (pt<1) continue;
+      float eta = pho.eta(), phi = pho.phi();
+      if (pt<25 || fabs(eta)>2.5)
+        continue;
+      if (IsMatched(&matchLeps,0.16,pho.eta(),pho.phi()))
+        continue;
+      loosePhos.push_back(&pho);
+      gt->nLoosePhoton++;
+      if (gt->loosePho1Pt < pt) {
+        gt->loosePho1Pt = pt;
+        gt->loosePho1Eta = eta;
+        gt->loosePho1Phi = phi;
+        int phoSelBit = 0;
+        if (pho.medium)                 phoSelBit |= pMedium; // this is always true as of now, but safer to have it like this
+        if (pho.tight)                  phoSelBit |= pTight;
+        if (pho.highpt)                 phoSelBit |= pHighPt;
+        if (pho.csafeVeto)              phoSelBit |= pCsafeVeto;
+        if (pho.pixelVeto)              phoSelBit |= pPixelVeto;
+        if (!PFChargedPhotonMatch(pho)) phoSelBit |= pTrkVeto;
+        gt->loosePho1SelBit = phoSelBit;
+        if (pho.medium && pho.csafeVeto && pho.pixelVeto) gt->loosePho1IsTight = 1;
+	else                                              gt->loosePho1IsTight = 0;
       }
-      if (tau.pt()<18 || fabs(tau.eta())>2.3)
-        continue;
-      if (IsMatched(&matchLeps,0.16,tau.eta(),tau.phi()))
-        continue;
-      gt->nTau++;
+      if ( pho.medium && pho.csafeVeto && pho.pixelVeto) { // apply eta cut offline
+        gt->nTightPhoton++;
+        matchPhos.push_back(&pho);
+      }
     }
 
-    tr->TriggerEvent("taus");
+    // TODO - store in a THCorr
+    if (isData && gt->nLoosePhoton>0) {
+      if (gt->loosePho1Pt>=175 && gt->loosePho1Pt<200)
+        gt->sf_phoPurity = 0.04802;
+      else if (gt->loosePho1Pt>=200 && gt->loosePho1Pt<250)
+        gt->sf_phoPurity = 0.04241;
+      else if (gt->loosePho1Pt>=250 && gt->loosePho1Pt<300)
+        gt->sf_phoPurity = 0.03641;
+      else if (gt->loosePho1Pt>=300 && gt->loosePho1Pt<350)
+        gt->sf_phoPurity = 0.0333;
+      else if (gt->loosePho1Pt>=350)
+        gt->sf_phoPurity = 0.02544;
+    }
+
+    tr->TriggerEvent("complicated photons");
+}
+
+bool PandaAnalyzer::PFChargedPhotonMatch(const panda::Photon& photon)
+{
+  double matchedRelPt = -1.;
+
+  for (auto& cand : event.pfCandidates) {
+    if (cand.q() == 0) continue;
+
+    double dr(cand.dR(photon));
+    double rawPt = photon.pt();
+    double relPt(cand.pt() / rawPt);
+    if (dr < 0.1 && relPt > matchedRelPt) {
+      matchedRelPt = relPt;
+    }
+
+  }
+
+  tr->TriggerSubEvent("pf photon match");
+
+  if (matchedRelPt > 0.6) return true;
+  
+  return false;
+
+}
+
+void PandaAnalyzer::Taus()
+{
+  for (auto& tau : event.taus) {
+    if (analysis->vbf) {
+      if (!tau.decayMode || !tau.decayModeNew)
+	continue;
+      if (!tau.looseIsoMVAOld)
+	continue;
+    } else {
+      if (!tau.decayMode || !tau.decayModeNew)
+	continue;
+      if (!tau.looseIsoMVA)
+	continue;
+    }
+    if (tau.pt()<18 || fabs(tau.eta())>2.3)
+      continue;
+    if (IsMatched(&matchLeps,0.16,tau.eta(),tau.phi()))
+      continue;
+    gt->nTau++;
+  }
+
+  tr->TriggerEvent("taus");
 }
 
 

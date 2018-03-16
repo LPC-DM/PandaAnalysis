@@ -30,8 +30,11 @@
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
+
+// Utils
 #include "PandaAnalysis/Utilities/interface/RoccoR.h"
 #include "PandaAnalysis/Utilities/interface/CSVHelper.h"
+#include "PandaAnalysis/Utilities/interface/EnergyCorrelations.h"
 
 // TMVA
 #include "TMVA/Reader.h"
@@ -66,11 +69,22 @@ public :
     };
     
     enum LepSelectionBit {
-     kLoose   =(1<<0),
-     kFake    =(1<<1),
-     kMedium  =(1<<2),
-     kTight   =(1<<3),
-     kDxyz    =(1<<4)
+     kLoose     =(1<<0),
+     kFake      =(1<<1),
+     kMedium    =(1<<2),
+     kTight     =(1<<3),
+     kDxyz      =(1<<4),
+     kEleMvaWP90=(1<<5),
+     kEleMvaWP80=(1<<6)
+    };
+
+    enum PhoSelectionBit {
+     pMedium    =(1<<0),
+     pTight     =(1<<1),
+     pHighPt    =(1<<2),
+     pCsafeVeto =(1<<3),
+     pPixelVeto =(1<<4),
+     pTrkVeto   =(1<<5)
     };
 
     enum TriggerBits {
@@ -86,6 +100,7 @@ public :
         kEleFakeTrig,
         kNTrig
     };
+
 
     //////////////////////////////////////////////////////////////////////////////////////
 
@@ -121,6 +136,8 @@ private:
         cEleLoose,    //!< monojet SF, Tight ID for e
         cEleMedium,   //!< monojet SF, Tight ID for e
         cEleTight,    //!< monojet SF, Tight ID for e
+        cEleMvaWP90,
+        cEleMvaWP80,
         cEleReco,     //!< monojet SF, tracking for e
         cWmHEwkCorr,     //!< W(l-V)H Ewk Corr weight  
         cWmHEwkCorrUp,   //!< W(l-V)H Ewk Corr weight Up  
@@ -174,6 +191,7 @@ private:
         bJetL=0,
         bSubJetL,
         bJetM,
+        bSubJetM,
         bN
     };
 
@@ -193,13 +211,41 @@ private:
     };
 
     struct GenJetInfo {
-      float pt=0, eta=0, phi=0, m=0;
-      float msd=0;
-      float tau3=0, tau2=0, tau1=0;
-      float tau3sd=0, tau2sd=0, tau1sd=0;
-      int nprongs=0;
-      float partonpt=0, partonm=0;
+    public:
+      float pt=-1, eta=-1, phi=-1, m=-1;
+      float msd=-1;
+      float tau3=-1, tau2=-1, tau1=-1;
+      float tau3sd=-1, tau2sd=-1, tau1sd=-1;
+      int nprongs=-1;
+      float partonpt=-1, partonm=-1;
       std::vector<std::vector<float>> particles;
+      std::vector<std::vector<std::vector<float>>> ecfs; // uh
+      void reset() {
+        pt=-1; eta=-1; phi=-1; m=-1;
+        msd=-1;
+        tau3=-1; tau2=-1; tau1=-1;
+        tau3sd=-1; tau2sd=-1; tau1sd=-1;
+        nprongs=-1;
+        partonpt=-1; partonm=-1;
+        for (auto& v : particles) {
+          for (auto& vv : v) {
+            vv = 0;
+          }
+        }
+        for (auto& v : ecfs) {
+          for (auto& vv : v) {
+            for (auto& vvv : vv) {
+              vvv = -1;
+            }
+          }
+        }
+      }
+
+    };
+
+    struct JetHistory {
+      int user_idx;
+      int child_idx;
     };
 
     //////////////////////////////////////////////////////////////////////////////////////
@@ -218,6 +264,7 @@ private:
     void CalcBJetSFs(BTagType bt, int flavor, double eta, double pt, 
                      double eff, double uncFactor, double &sf, double &sfUp, double &sfDown);
     void ComplicatedLeptons();
+    void ComplicatedPhotons();
     void EvalBTagSF(std::vector<btagcand> &cands, std::vector<double> &sfs,
                     GeneralTree::BTagShift shift,GeneralTree::BTagJet jettype, bool do2=false);
     void IncrementAuxFile(bool close=false);
@@ -226,7 +273,6 @@ private:
     void FatjetMatching();
     void FatjetPartons();
     void FatjetRecluster();
-    template <typename T> void FillGenTree(panda::Collection<T>& genParticles);
     void FillPFTree();
     void GenFatJet();
     void GenJetsNu();
@@ -245,9 +291,8 @@ private:
     void JetVBFSystem();
     void JetVaryJES(panda::Jet&);
     void LeptonSFs();
-    template <typename T> void MatchGenJets(T& genJets);
+    bool PFChargedPhotonMatch(const panda::Photon& photon);
     void PhotonSFs();
-    void Photons();
     void QCDUncs();
     void Recoil();
     bool RecoilPresel();
@@ -256,12 +301,18 @@ private:
     void SignalInfo();
     void SignalReweights();
     void SimpleLeptons();
+    void SimplePhotons();
     void Taus();
     void TopPTReweight();
     void TriggerEffs();
     void VJetsReweight();
     double WeightEWKCorr(float pt, int type);
     double WeightZHEWKCorr(float baseCorr);
+
+    // templated functions
+    template <typename T> void CountGenPartons(std::unordered_set<const T*>&, const panda::Collection<T>&);
+    template <typename T> void FillGenTree(panda::Collection<T>& genParticles);
+    template <typename T> void MatchGenJets(T& genJets);
 
     //////////////////////////////////////////////////////////////////////////////////////
 
@@ -296,12 +347,13 @@ private:
     // CMSSW-provided utilities
     BTagCalibration *btagCalib=0;
     BTagCalibration *sj_btagCalib=0;
-    std::vector<BTagCalibrationReader*> btagReaders = std::vector<BTagCalibrationReader*>(bN,0); //!< maps BTagType to a reader 
+    std::vector<BTagCalibrationReader*> btagReaders = std::vector<BTagCalibrationReader*>(bN,0); 
+      //!< maps BTagType to a reader 
 
     Binner btagpt = Binner({});
     Binner btageta = Binner({});
     std::vector<std::vector<double>> lfeff, ceff, beff;
-    TMVA::Reader *bjetreg_reader=0; 
+    TMVA::Reader *bjetregReader=0; 
 
     std::map<TString,JetCorrectionUncertainty*> ak8UncReader; //!< calculate JES unc on the fly
     JERReader *ak8JERReader{0}; //!< fatjet jet energy resolution reader
@@ -313,6 +365,8 @@ private:
     FactorizedJetCorrector *scaleReaderAK4=0;        
 
     EraHandler eras = EraHandler(2016); //!< determining data-taking era, to be used for era-dependent JEC
+    ParticleGridder *grid = 0;
+    pandaecf::ECFNManager *ecfnMan = 0;
 
     //////////////////////////////////////////////////////////////////////////////////////
 
@@ -354,38 +408,42 @@ private:
 
     //////////////////////////////////////////////////////////////////////////////////////
 
-    // any extra signal weights we want
     // stuff that gets passed between modules
     //
     // NB: ensure that any global vectors/maps that are per-event
     // are reset properly in ResetBranches(), or you can really
     // mess up behavior
+    std::vector<TString> wIDs;
     std::vector<TriggerHandler> triggerHandlers = std::vector<TriggerHandler>(kNTrig);
+
     std::vector<panda::Lepton*> looseLeps, tightLeps;
     std::vector<panda::Photon*> loosePhos;
+    int looseLep1PdgId, looseLep2PdgId, looseLep3PdgId, looseLep4PdgId;
+
     TLorentzVector vPFMET, vPuppiMET;
     TVector2 vMETNoMu;
     TLorentzVector vpfUW, vpfUZ, vpfUWW, vpfUA, vpfU;
     TLorentzVector vpuppiUW, vpuppiUZ, vpuppiUWW, vpuppiUA, vpuppiU;
+    
     panda::FatJet *fj1 = 0;
-    std::vector<panda::Jet*> cleanedJets, isoJets, centralJets, bCandJets;
-    std::map<panda::Jet*,int> bCandJetGenFlavor;
-    std::map<panda::Jet*,float> bCandJetGenPt;
-    TLorentzVector vJet, vBarrelJets;
     panda::FatJetCollection *fatjets = 0;
+    std::vector<panda::Jet*> cleanedJets, isoJets, centralJets, bCandJets;
+    TLorentzVector vJet, vBarrelJets;
     panda::JetCollection *jets = 0;
     panda::Jet *jot1 = 0, *jot2 = 0;
     panda::Jet *jotUp1 = 0, *jotUp2 = 0;
     panda::Jet *jotDown1 = 0, *jotDown2 = 0;
     panda::Jet *jetUp1 = 0, *jetUp2 = 0;
     panda::Jet *jetDown1 = 0, *jetDown2 = 0;
-    std::vector<panda::GenJet> genJetsNu;
-    float genBosonPtMin, genBosonPtMax;
-    int looseLep1PdgId, looseLep2PdgId, looseLep3PdgId, looseLep4PdgId;
-    std::vector<TString> wIDs;
-    float *bjetreg_vars = 0;
     float jetPtThreshold=30;
     float bJetPtThreshold=30;
+    std::map<panda::Jet*,int> bCandJetGenFlavor;
+    std::map<panda::Jet*,float> bCandJetGenPt;
+
+    std::vector<panda::GenJet> genJetsNu;
+    float genBosonPtMin, genBosonPtMax;
+
+    float *bjetreg_vars = 0;
 
     std::vector<std::vector<float>> pfInfo;
     std::vector<std::vector<float>> svInfo; 
@@ -401,266 +459,7 @@ private:
 
 /** templated functions **/
 
-template <typename T> 
-void PandaAnalyzer::MatchGenJets(T& genJets) 
-{
-  unsigned N = cleanedJets.size();
-  for (unsigned i = 0; i != N; ++i) {
-    panda::Jet *reco = cleanedJets.at(i);
-    for (auto &gen : genJets) {
-      if (DeltaR2(gen.eta(), gen.phi(), reco->eta(), reco->phi()) < 0.09) {
-        gt->jetGenPt[i] = gen.pt();
-        gt->jetGenFlavor[i] = gen.pdgid;
-        break;
-      }
-    }
-  }
-  tr->TriggerEvent("match gen jets");
-}
-
-template <typename T>
-void PandaAnalyzer::FillGenTree(panda::Collection<T>& genParticles)
-{
-
-  genJetInfo.pt = -1; genJetInfo.eta = -1; genJetInfo.phi = -1; genJetInfo.m = -1;
-  genJetInfo.msd = -1;
-  genJetInfo.tau3 = -1; genJetInfo.tau2 = -1; genJetInfo.tau1 = -1;
-  genJetInfo.tau3sd = -1; genJetInfo.tau2sd = -1; genJetInfo.tau1sd = -1;
-  genJetInfo.nprongs = -1;
-  genJetInfo.partonpt = -1; genJetInfo.partonm = -1;
-  gt->genFatJetPt = 0;
-  for (unsigned i = 0; i != NMAXPF; ++i) {
-    for (unsigned j = 0; j != NGENPROPS; ++j) {
-      genJetInfo.particles[i][j] = 0;
-    }
-  }
-
-  std::vector<fastjet::PseudoJet> finalStates;
-  unsigned idx = -1;
-  for (auto &p : genParticles) {
-    idx++;
-    unsigned apdgid = abs(p.pdgid);
-    if (!p.finalState)
-      continue;
-    if (apdgid == 12 ||
-        apdgid == 14 ||
-        apdgid == 16)
-      continue; 
-    if (p.pt() > 0.001) {
-      finalStates.emplace_back(p.px(), p.py(), p.pz(), p.e());
-      finalStates.back().set_user_index(idx);
-    }
-  }
-
-  // cluster the  jet 
-  fastjet::ClusterSequenceArea seq(finalStates, *jetDef, *areaDef);
-  std::vector<fastjet::PseudoJet> allJets(seq.inclusive_jets(0.));
-
-  if (allJets.size() == 0) {
-    tr->TriggerEvent("fill gen tree");
-    return;
-  }
-
-  fastjet::PseudoJet fullJet = fastjet::sorted_by_pt(allJets).at(0);
-  gt->genFatJetPt = fullJet.perp();
-
-  if (gt->genFatJetPt < 450) {
-    tr->TriggerEvent("fill gen tree");
-    return;
-  }
-
-  VPseudoJet allConstituents = fastjet::sorted_by_pt(fullJet.constituents());
-  genJetInfo.pt = gt->genFatJetPt;
-  genJetInfo.m = fullJet.m();
-  genJetInfo.eta = fullJet.eta();
-  genJetInfo.phi = fullJet.phi();
-
-  // softdrop the jet
-  fastjet::PseudoJet sdJet = (*softDrop)(fullJet);
-  VPseudoJet sdConstituents = fastjet::sorted_by_pt(sdJet.constituents());
-  genJetInfo.msd = sdJet.m();
-  std::vector<bool> survived(allConstituents.size());
-  unsigned nC = allConstituents.size();
-  for (unsigned iC = 0; iC != nC; ++iC) {
-    unsigned idx = allConstituents.at(iC).user_index();
-    survived[iC] = false;
-    for (auto &sdc : sdConstituents) {
-      if (idx == sdc.user_index()) {
-        survived[iC] = true; 
-        break;
-      }
-    }
-  }
-
-  // get tau  
-  genJetInfo.tau1 = tauN->getTau(1, allConstituents);
-  genJetInfo.tau2 = tauN->getTau(2, allConstituents);
-  genJetInfo.tau3 = tauN->getTau(3, allConstituents);
-  genJetInfo.tau1sd = tauN->getTau(1, sdConstituents);
-  genJetInfo.tau2sd = tauN->getTau(2, sdConstituents);
-  genJetInfo.tau3sd = tauN->getTau(3, sdConstituents);
-
-  // now we have to count the number of prongs 
-  float dR2 = FATJETMATCHDR2;
-  float base_eta = genJetInfo.eta, base_phi = genJetInfo.phi;
-  auto matchJet = [base_eta, base_phi, dR2](const T &p) -> bool {
-    return DeltaR2(base_eta, base_phi, p.eta(), p.phi()) < dR2;
-  };
-  float threshold = genJetInfo.pt * 0.2;
-  std::unordered_set<const T*> partons; 
-  for (auto &gen : genParticles) {
-    unsigned apdgid = abs(gen.pdgid);
-    if (apdgid > 5 && 
-        apdgid != 21 &&
-        apdgid != 15 &&
-        apdgid != 11 && 
-        apdgid != 13)
-      continue; 
-
-    if (gen.pt() < threshold)
-      continue; 
-
-    if (!matchJet(gen))
-      continue;
-
-    const T *parent = &gen;
-    const T *foundParent = NULL;
-    while (parent->parent.isValid()) {
-      parent = parent->parent.get();
-      if (partons.find(parent) != partons.end()) {
-        foundParent = parent;
-        break;
-      }
-    }
-
-
-    T *dau1 = NULL, *dau2 = NULL;
-    for (auto &child : genParticles) {
-      if (!(child.parent.isValid() && 
-            child.parent.get() == &gen))
-        continue; 
-      
-      unsigned child_apdgid = abs(child.pdgid);
-      if (child_apdgid > 5 && 
-          child_apdgid != 21 &&
-          child_apdgid != 15 &&
-          child_apdgid != 11 && 
-          child_apdgid != 13)
-        continue; 
-
-      if (dau1)
-        dau2 = &child;
-      else
-        dau1 = &child;
-
-      if (dau1 && dau2)
-        break;
-    }
-
-    if (dau1 && dau2 && 
-        dau1->pt() > threshold && dau2->pt() > threshold && 
-        matchJet(*dau1) && matchJet(*dau2)) {
-      if (foundParent) {
-        partons.erase(partons.find(foundParent));
-      }
-      partons.insert(dau1);
-      partons.insert(dau2);
-    } else if (foundParent) {
-      continue; 
-    } else {
-      partons.insert(&gen);
-    }
-  }
-
-  genJetInfo.nprongs = partons.size();
-
-  TLorentzVector vPartonSum;
-  TLorentzVector vTmp;
-  for (auto *p : partons) {
-    vTmp.SetPtEtaPhiM(p->pt(), p->eta(), p->phi(), p->m());
-    vPartonSum += vTmp;
-  }
-  genJetInfo.partonm = vPartonSum.M();
-  genJetInfo.partonpt = vPartonSum.Pt();
-
-  std::map<const T*, unsigned> partonToIdx;
-  for (auto &parton : partons) 
-    partonToIdx[parton] = partonToIdx.size(); // just some arbitrary ordering 
-
-  // get the hardest particle with angle wrt jet axis > 0.1
-  fastjet::PseudoJet *axis2 = NULL;
-  for (auto &c : allConstituents) {
-    if (DeltaR2(c.eta(), c.phi(), genJetInfo.eta, genJetInfo.phi) > 0.01) {
-      if (!axis2 || (c.perp() > axis2->perp())) {
-        axis2 = &c;
-      }
-    }
-  }
-
-  JetRotation rot(fullJet.px(), fullJet.py(), fullJet.pz(),
-                  axis2->px(), axis2->py(), axis2->pz());
-
-  // now we fill the particles
-  nC = std::min(nC, (unsigned)NMAXPF);
-  for (unsigned iC = 0; iC != nC; ++iC) {
-    fastjet::PseudoJet &c = allConstituents.at(iC);
-
-    if (c.perp() < 0.0001 || c.user_index() < 0) // not a real particle
-      continue;
-
-    // genJetInfo.particles[iC][0] = c.perp() / fullJet.perp();
-    // genJetInfo.particles[iC][1] = c.eta() - fullJet.eta();
-    // genJetInfo.particles[iC][2] = SignedDeltaPhi(c.phi(), fullJet.phi());
-    // genJetInfo.particles[iC][3] = c.m();
-    // genJetInfo.particles[iC][4] = c.e();
-    float angle = DeltaR2(c.eta(), c.phi(), genJetInfo.eta, genJetInfo.phi);
-    float x=c.px(), y=c.py(), z=c.pz();
-    rot.Rotate(x, y, z);  // perform two rotations on the jet 
-    genJetInfo.particles[iC][0] = x;
-    genJetInfo.particles[iC][1] = y;
-    genJetInfo.particles[iC][2] = z;
-    genJetInfo.particles[iC][3] = c.e();
-    genJetInfo.particles[iC][4] = angle;
-    genJetInfo.particles[iC][5] = survived[iC] ? 1 : 0;
-
-    unsigned ptype = 0;
-    T &gen = genParticles.at(c.user_index());
-    int pdgid = gen.pdgid;
-    unsigned apdgid = abs(pdgid);
-    if (apdgid == 11) {
-      ptype = 1 * sign(pdgid * -11);
-    } else if (apdgid == 13) {
-      ptype = 2 * sign(pdgid * -13);
-    } else if (apdgid == 22) {
-      ptype = 3;
-    } else {
-      float q = pdgToQ[apdgid];
-      if (apdgid != pdgid)
-        q *= -1;
-      if (q == 0) 
-        ptype = 4;
-      else if (q > 0) 
-        ptype = 5;
-      else 
-        ptype = 6;
-    }
-    genJetInfo.particles[iC][6] = ptype;
-
-    const T *parent = &gen;
-    int parent_idx = -1;
-    while (parent->parent.isValid()) {
-      parent = parent->parent.get();
-      if (partons.find(parent) != partons.end()) {
-        parent_idx = partonToIdx[parent];
-        break;
-      }
-    }
-    genJetInfo.particles[iC][7] = parent_idx;
-  }
-
-  tr->TriggerEvent("fill gen tree");
-}
-
+#include "TemplatedPandaAnalyzer.h"
 
 #endif
 

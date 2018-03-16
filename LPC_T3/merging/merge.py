@@ -13,10 +13,12 @@ sname = argv[0]
 parser = ArgumentParser()
 parser.add_argument('--silent', action='store_true')
 parser.add_argument('--cfg', type=str, default='common')
+parser.add_argument('--skip_missing', action='store_true')
 parser.add_argument('arguments', type=str, nargs='+')
 args = parser.parse_args()
 arguments = args.arguments
 VERBOSE = not args.silent
+skip_missing = args.skip_missing
 argv=[]
 
 import ROOT as root
@@ -65,12 +67,12 @@ def hadd(inpath,outpath):
             PInfo(sname,'hadding %s into %s'%(inpath,outpath))
             cmd = '%s %s %s %s'%(hadd_cmd, outpath,inpath,suffix)
             system(cmd)
-            return
+            return True
     else:
         infiles = inpath
     if len(infiles)==0:
         PWarning(sname,'nothing hadded into '+outpath)
-        return
+        return False
     elif len(infiles)==1:
         PInfo(sname,'moving %s to %s'%(inpath[0],outpath))
         cmd = 'mv -v %s %s'%(infiles[0],outpath)
@@ -82,6 +84,7 @@ def hadd(inpath,outpath):
         PInfo(sname,'hadding into %s'%(outpath))
     if VERBOSE: PInfo(sname,cmd)
     system(cmd+suffix)
+    return True
 
 def normalizeFast(fpath,opt):
     xsec=-1
@@ -103,6 +106,7 @@ def normalizeFast(fpath,opt):
     n.NormalizeTree(fpath,xsec)
 
 def merge(shortnames,mergedname):
+    to_skip = []
     for shortname in shortnames:
         if 'monotop' in shortname:
             pd = shortname
@@ -147,10 +151,16 @@ def merge(shortnames,mergedname):
                     xsec = pds[shortname_][1]
                     break
         inpath = inbase+shortname+'_*.root'
-        hadd(inpath,'/tmp/%s/split/%s.root'%(user,shortname))
-        if xsec>0:
+        success = hadd(inpath,'/tmp/%s/split/%s.root'%(user,shortname))
+        if xsec>0 and success:
             normalizeFast('/tmp/%s/split/%s.root'%(user,shortname),xsec)
-    to_hadd = ['/tmp/%s/split/%s.root'%(user,x) for x in shortnames]
+        if not success:
+            if not skip_missing:
+                PError(sname, 'Could not merge %s, exiting!'%shortname)
+                exit(1)
+            else:
+                to_skip.append(shortname)
+    to_hadd = ['/tmp/%s/split/%s.root'%(user,x) for x in shortnames if x not in to_skip]
     hadd(to_hadd, '/tmp/%s/merged/%s.root'%(user,mergedname))
     for f in to_hadd:
         system('rm -f %s'%f)

@@ -34,6 +34,27 @@ def analysis(name, **kwargs):
 
 
 # predefined!
+boosted = lambda v=False : _analysis(
+        name = 'boosted',
+        verbose = v,
+        boosted = True,
+    )
+
+resolved = lambda v=False : _analysis(
+        name = 'resolved',
+        verbose = v,
+    )
+
+monojet = lambda v=False : _analysis(
+        name = 'monojet',
+        verbose = v,
+    )
+
+lepmonotop = lambda v=False : _analysis(
+        name = 'lepmonotop',
+        verbose = v,
+    )
+
 monotop = lambda v=False : _analysis(
         name = 'monotop',
         verbose = v,
@@ -48,16 +69,9 @@ vbf = lambda v=False : _analysis(
         puppi_jets = False
     )
 
-monoh = lambda v=False : _analysis(
-        name = 'monoh',
-        verbose = v,
-        monoh = True,
-    )
-
 gghbb = lambda v=False : _analysis(
         name = 'gghbb',
         verbose = v,
-        monoh = True,
         recoil = False,
         ak8 = True,
     )
@@ -86,15 +100,37 @@ deepgen = lambda v=False : _analysis(
 wlnhbb = lambda v=False : _analysis(
         name = 'wlnhbb',
         verbose = v,
+        ak8 = True,
         hbb = True,
+        monoh = False,
         recoil = True,
         fatjet = True,
-        btagSFs = False,
+        btagSFs = True,
         btagWeights = True,
         useCMVA = True,
         complicatedLeptons = True,
         hfCounting = True,
-        reclusterGen = False,
+        reclusterGen = True,
+        bjetRegression = True,
+        varyJES = True,
+        rerunJES = True,
+        jetFlavorPartons = False,
+        jetFlavorJets = True,
+    )
+wlnhbb_ca15 = lambda v=False : _analysis(
+        name = 'wlnhbb',
+        verbose = v,
+        ak8 = False,
+        hbb = True,
+        monoh = False,
+        recoil = True,
+        fatjet = True,
+        btagSFs = True,
+        btagWeights = True,
+        useCMVA = True,
+        complicatedLeptons = True,
+        hfCounting = True,
+        reclusterGen = True,
         bjetRegression = True,
         varyJES = True,
         rerunJES = True,
@@ -109,7 +145,9 @@ vv = lambda v=False : _analysis(
         fatjet = False,
         btagSFs = True,
         complicatedLeptons = True,
+        complicatedPhotons = True,
         applyMCTriggers = True,
+        varyJES = True,
         jetFlavorPartons = False,
         jetFlavorJets = True,
     )

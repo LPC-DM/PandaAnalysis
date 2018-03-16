@@ -27,7 +27,14 @@ void PandaAnalyzer::IncrementGenAuxFile(bool close)
   for (unsigned i = 0; i != NMAXPF; ++i) {
     genJetInfo.particles[i].resize(NGENPROPS);
   }
-  tAux->Branch("kinematics",&(genJetInfo.particles));
+
+  genJetInfo.ecfs.resize(3);
+  for (int o = 0; o != 3; ++o) {
+    genJetInfo.ecfs.at(o).resize(4);
+    for (int N = 0; N != 4; ++N) {
+      genJetInfo.ecfs.at(o).at(N).resize(2);
+    }
+  }
 
   tAux->Branch("eventNumber",&(gt->eventNumber),"eventNumber/l");
   tAux->Branch("nprongs",&(genJetInfo.nprongs),"nprongs/I");
@@ -44,6 +51,15 @@ void PandaAnalyzer::IncrementGenAuxFile(bool close)
   tAux->Branch("tau3sd",&(genJetInfo.tau3sd),"tau3sd/F");
   tAux->Branch("tau2sd",&(genJetInfo.tau2sd),"tau2sd/F");
   tAux->Branch("tau1sd",&(genJetInfo.tau1sd),"tau1sd/F");
+  for (int o = 1; o != 4; ++o) {
+    for (int N = 1; N != 5; ++N) {
+      for (int beta = 1; beta != 3; ++beta) {
+        TString bname = Form("%i_%i_%i",o,N,beta);
+        tAux->Branch(bname,&(genJetInfo.ecfs[o-1][N-1][beta-1]),bname+"/F");
+      }
+    }
+  }
+  tAux->Branch("kinematics",&(genJetInfo.particles));
 
   fOut->cd();
 
@@ -277,7 +293,7 @@ void PandaAnalyzer::Recoil()
 
 void PandaAnalyzer::HeavyFlavorCounting() 
 {
-  // For now, simple B and C counting
+  // Simple B and C counting stored in nB, nHF
   for (auto& gen : event.genParticles) {
     float pt = gen.pt();
     int pdgid = gen.pdgid;
@@ -293,22 +309,17 @@ void PandaAnalyzer::HeavyFlavorCounting()
         gt->nB++;
     }
   }
+  // Gen B jet counting stored in nBGenJets
+  for (auto &gen : event.ak4GenJets) {
+    if (gen.pt() > 20 && std::abs(gen.eta()) < 2.4 && (gen.numB != 0 || abs(gen.pdgid)==5))
+      gt->nBGenJets++;
+  }
 }
 
 void PandaAnalyzer::GetMETSignificance()
 {
-  float pfEt = 0;
-  float puppiEt = 0;
-
-  TLorentzVector pfcand(0,0,0,0);
-  for (auto& pfCand : event.pfCandidates) {
-    pfcand.SetPtEtaPhiM(pfCand.pt(),pfCand.eta(),pfCand.phi(),pfCand.m());
-    puppiEt += pfcand.Et()*pfCand.puppiW();
-    pfEt += pfcand.Et();
-  }
-
-  gt->pfmetsig = event.pfMet.pt/sqrt(pfEt);
-  gt->puppimetsig = event.puppiMet.pt/sqrt(puppiEt);
+  gt->pfmetsig = event.pfMet.significance;
+  gt->puppimetsig = event.puppiMet.significance;
 
   tr->TriggerEvent("MET significance");
 }

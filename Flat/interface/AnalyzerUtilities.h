@@ -22,6 +22,54 @@
 // root
 #include "TRotation.h"
 
+////////////////////////////////////////////////////////////////////////////////////
+
+class JetTree {
+  public:
+    JetTree(fastjet::PseudoJet& root): _root(root) { }
+    ~JetTree() { }
+    std::vector<int> GetTerminals() {
+      std::vector<int> v;
+      _root.GetTerminals(v);
+      return v;
+    }
+
+    struct compare : public std::unary_function<fastjet::PseudoJet, bool> {
+      explicit compare(int x_) : _x(x_) {}
+      bool operator() (const fastjet::PseudoJet& y_) { return _x == y_.user_index(); }
+      int _x;
+    };
+
+  private:
+    class Node {
+      public:
+        Node(fastjet::PseudoJet& pj_);
+        ~Node() { delete l; delete r; }
+        void GetTerminals(std::vector<int>&);
+        fastjet::PseudoJet _pj;
+        Node *l=0, *r=0;   
+    };
+
+    Node _root;
+};
+
+////////////////////////////////////////////////////////////////////////////////////
+
+class ParticleGridder {
+  public:
+    ParticleGridder(unsigned etaN, unsigned phiN, float etaMax=5);
+    ~ParticleGridder() { clear(); delete hEta_; delete hPhi_; }
+    void clear();
+    void add(panda::Particle& p);
+    std::vector<TLorentzVector>& get();
+  private:
+    float etaMax_, phiMax_;
+    TH1F *hEta_=0, *hPhi_=0;
+    std::vector<std::vector<std::vector<TLorentzVector*>>> collections_;
+    std::vector<TLorentzVector> particles_;
+    std::vector<std::pair<int,int>> nonEmpty_;
+    std::vector<TLorentzVector> gridded_; 
+};
 
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -70,9 +118,11 @@ public:
   bool btagSFs = true;
   bool btagWeights = false;
   bool complicatedLeptons = false;
+  bool complicatedPhotons = false;
   bool deep = false;
   bool deepAntiKtSort = false;
   bool deepGen = false;
+  bool deepGenGrid = false;
   bool deepKtSort = false;
   bool deepSVs = false;
   bool deepTracks = false;
@@ -83,7 +133,8 @@ public:
   bool hfCounting = false;
   bool jetFlavorPartons = true;
   bool jetFlavorJets = false;
-  bool monoh = false;
+ // bool monoh = false;
+  bool boosted = false;
   bool puppi_jets = true;
   bool recluster = false;
   bool reclusterGen = false;

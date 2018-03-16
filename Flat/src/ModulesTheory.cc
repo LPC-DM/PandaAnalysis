@@ -381,12 +381,21 @@ void PandaAnalyzer::GenStudyEWK() {
   gt->genLep2Eta = -1;
   gt->genLep2Phi = -1;
   gt->genLep2PdgId = 0;
+  gt->genLep3Pt = 0;
+  gt->genLep3Eta = -1;
+  gt->genLep3Phi = -1;
+  gt->genLep3PdgId = 0;
+  gt->genLep4Pt = 0;
+  gt->genLep4Eta = -1;
+  gt->genLep4Phi = -1;
+  gt->genLep4PdgId = 0;
   gt->looseGenLep1PdgId = 0;
   gt->looseGenLep2PdgId = 0;
   gt->looseGenLep3PdgId = 0;
   gt->looseGenLep4PdgId = 0;
+  gt->looseGenPho1PdgId = 0;
   if (isData) return;
-  TLorentzVector v1,v2,v3,v4;
+  TLorentzVector v1,v2,v3,v4,p1;
   if (gt->nLooseLep>=1) {
     panda::Lepton *lep1=looseLeps[0];
     v1.SetPtEtaPhiM(lep1->pt(),lep1->eta(),lep1->phi(),lep1->m());
@@ -402,6 +411,10 @@ void PandaAnalyzer::GenStudyEWK() {
   if (gt->nLooseLep>=4) {
     panda::Lepton *lep4=looseLeps[3];
     v4.SetPtEtaPhiM(lep4->pt(),lep4->eta(),lep4->phi(),lep4->m());
+  }
+  if (gt->nLoosePhoton>=1) {
+    panda::Photon *pho = loosePhos[0];
+    p1.SetPtEtaPhiM(pho->pt(),pho->eta(),pho->phi(),0.);
   }
   // gen lepton matching
   std::vector<int> targetsLepton;
@@ -451,6 +464,16 @@ void PandaAnalyzer::GenStudyEWK() {
 
   tr->TriggerSubEvent("check gen infos");
 
+  for (int jG : targetsPhoton) {
+    auto& partph(event.genParticles.at(jG));
+    
+    if (partph.pt() <= 10) continue; // ignore low pt photons
+
+    if (p1.Pt() > 0 && DeltaR2(partph.eta(),partph.phi(),p1.Eta(),p1.Phi()) < 0.01) {
+        gt->looseGenPho1PdgId = 3;
+    }    
+  }
+
   TLorentzVector rhoP4(0,0,0,0);
   double bosonPtMin = 1000000000;
   for (int iG : targetsLepton) {
@@ -479,6 +502,14 @@ void PandaAnalyzer::GenStudyEWK() {
       pdgId = 15 * part.pdgid/abs(part.pdgid);
     }
     if (dressedLepton.Pt() > gt->genLep1Pt) {
+      gt->genLep4Pt    = gt->genLep3Pt; 
+      gt->genLep4Eta   = gt->genLep3Eta;
+      gt->genLep4Phi   = gt->genLep3Phi;
+      gt->genLep4PdgId = gt->genLep3PdgId; 
+      gt->genLep3Pt    = gt->genLep2Pt; 
+      gt->genLep3Eta   = gt->genLep2Eta;
+      gt->genLep3Phi   = gt->genLep2Phi;
+      gt->genLep3PdgId = gt->genLep2PdgId; 
       gt->genLep2Pt    = gt->genLep1Pt; 
       gt->genLep2Eta   = gt->genLep1Eta;
       gt->genLep2Phi   = gt->genLep1Phi;
@@ -487,11 +518,36 @@ void PandaAnalyzer::GenStudyEWK() {
       gt->genLep1Eta   = dressedLepton.Eta();
       gt->genLep1Phi   = dressedLepton.Phi();
       gt->genLep1PdgId = pdgId;
-    } else if (dressedLepton.Pt() > gt->genLep2Pt) {
+    } 
+    else if (dressedLepton.Pt() > gt->genLep2Pt) {
+      gt->genLep4Pt    = gt->genLep3Pt; 
+      gt->genLep4Eta   = gt->genLep3Eta;
+      gt->genLep4Phi   = gt->genLep3Phi;
+      gt->genLep4PdgId = gt->genLep3PdgId; 
+      gt->genLep3Pt    = gt->genLep2Pt; 
+      gt->genLep3Eta   = gt->genLep2Eta;
+      gt->genLep3Phi   = gt->genLep2Phi;
+      gt->genLep3PdgId = gt->genLep2PdgId; 
       gt->genLep2Pt    = dressedLepton.Pt();
       gt->genLep2Eta   = dressedLepton.Eta();
       gt->genLep2Phi   = dressedLepton.Phi();
       gt->genLep2PdgId = pdgId; 
+    }
+    else if (dressedLepton.Pt() > gt->genLep3Pt) {
+      gt->genLep4Pt    = gt->genLep3Pt; 
+      gt->genLep4Eta   = gt->genLep3Eta;
+      gt->genLep4Phi   = gt->genLep3Phi;
+      gt->genLep4PdgId = gt->genLep3PdgId; 
+      gt->genLep3Pt    = dressedLepton.Pt();
+      gt->genLep3Eta   = dressedLepton.Eta();
+      gt->genLep3Phi   = dressedLepton.Phi();
+      gt->genLep3PdgId = pdgId; 
+    }
+    else if (dressedLepton.Pt() > gt->genLep4Pt) {
+      gt->genLep4Pt    = dressedLepton.Pt();
+      gt->genLep4Eta   = dressedLepton.Eta();
+      gt->genLep4Phi   = dressedLepton.Phi();
+      gt->genLep4PdgId = pdgId; 
     }
     panda::Muon *mu; panda::Electron *ele;
     if (v1.Pt() > 0 && DeltaR2(part.eta(),part.phi(),v1.Eta(),v1.Phi()) < 0.01) {
@@ -528,9 +584,6 @@ void PandaAnalyzer::GenStudyEWK() {
         gt->looseGenLep2PdgId = -1 * gt->looseGenLep2PdgId;
     }
     if (v3.Pt() > 0 && DeltaR2(part.eta(),part.phi(),v3.Eta(),v3.Phi()) < 0.01) {
-      mu = dynamic_cast<panda::Muon*>(looseLeps[2]);
-      ele = dynamic_cast<panda::Electron*>(looseLeps[2]);
-      int looseLep3PdgId = mu? mu->charge*-13 : (ele? ele->charge*-13 : 0);
       if (part.testFlag(GenParticle::kIsTauDecayProduct) 
           || part.testFlag(GenParticle::kIsPromptTauDecayProduct) 
           || part.testFlag(GenParticle::kIsDirectTauDecayProduct) 
@@ -547,9 +600,6 @@ void PandaAnalyzer::GenStudyEWK() {
         gt->looseGenLep3PdgId = -1 * gt->looseGenLep3PdgId;
     }
     if (v4.Pt() > 0 && DeltaR2(part.eta(),part.phi(),v4.Eta(),v4.Phi()) < 0.01) {
-      mu = dynamic_cast<panda::Muon*>(looseLeps[3]);
-      ele = dynamic_cast<panda::Electron*>(looseLeps[3]);
-      int looseLep4PdgId = mu? mu->charge*-13 : (ele? ele->charge*-13 : 0);
       if (part.testFlag(GenParticle::kIsTauDecayProduct) 
           || part.testFlag(GenParticle::kIsPromptTauDecayProduct) 
           || part.testFlag(GenParticle::kIsDirectTauDecayProduct) 
@@ -564,6 +614,20 @@ void PandaAnalyzer::GenStudyEWK() {
       }
       if (part.pdgid != looseLep4PdgId) 
         gt->looseGenLep4PdgId = -1 * gt->looseGenLep4PdgId;
+    }
+    if (p1.Pt() > 0 && DeltaR2(part.eta(),part.phi(),p1.Eta(),p1.Phi()) < 0.01) {
+      if (part.testFlag(GenParticle::kIsTauDecayProduct) 
+          || part.testFlag(GenParticle::kIsPromptTauDecayProduct) 
+          || part.testFlag(GenParticle::kIsDirectTauDecayProduct) 
+          || part.testFlag(GenParticle::kIsDirectPromptTauDecayProduct) 
+          || (part.parent.isValid() && abs(part.parent->pdgid) == 15)) 
+      {
+        gt->looseGenPho1PdgId = 2;
+      } else if (part.testFlag(GenParticle::kIsPrompt) 
+                 || part.statusFlags == GenParticle::kIsPrompt) 
+      {
+        gt->looseGenPho1PdgId = 1;
+      }
     }
   }
   
@@ -657,7 +721,7 @@ void PandaAnalyzer::GenStudyEWK() {
   } else {
     gt->sf_wz = 1.0;
   }
-  if(analysis->processType==kH) { 
+  if (analysis->processType==kH) { 
     if (nZBosons == 1 && gt->genLep2PdgId!=0) {
       gt->sf_vh     = WeightZHEWKCorr(GetCorr(cZllHEwkCorr,bound(zBosons.Pt(),0,499.999)));
       gt->sf_vhUp   = WeightZHEWKCorr(GetCorr(cZllHEwkCorrUp,bound(zBosons.Pt(),0,499.999)));
@@ -666,7 +730,7 @@ void PandaAnalyzer::GenStudyEWK() {
       gt->genBosonEta  = zBosons.Eta();
       gt->genBosonPt   = zBosons.Pt();
       gt->trueGenBosonPt = higgsBosons.Pt();
-    } else if(nZBosons==1 && nNeutrinos>0) {
+    } else if (nZBosons==1 && nNeutrinos>0) {
       gt->sf_vh     = WeightZHEWKCorr(GetCorr(cZnnHEwkCorr,bound(zBosons.Pt(),0,499.999)));
       gt->sf_vhUp   = WeightZHEWKCorr(GetCorr(cZnnHEwkCorrUp,bound(zBosons.Pt(),0,499.999)));
       gt->sf_vhDown = WeightZHEWKCorr(GetCorr(cZnnHEwkCorrDown,bound(zBosons.Pt(),0,499.999)));
@@ -674,8 +738,8 @@ void PandaAnalyzer::GenStudyEWK() {
       gt->genBosonEta  = zBosons.Eta();
       gt->genBosonPt   = zBosons.Pt();
       gt->trueGenBosonPt = higgsBosons.Pt();
-    } else if(nWBosons==1 && gt->genLep1PdgId!=0 && nNeutrinos>0) {
-      if(wBosonQ[0]>0) {
+    } else if (nWBosons==1 && gt->genLep1PdgId!=0 && nNeutrinos>0) {
+      if (wBosonQ[0]>0) {
         gt->sf_vh     = WeightZHEWKCorr(GetCorr(cWpHEwkCorr,bound(wBosons.Pt(),0,499.999)));
         gt->sf_vhUp   = WeightZHEWKCorr(GetCorr(cWpHEwkCorrUp,bound(wBosons.Pt(),0,499.999)));
         gt->sf_vhDown = WeightZHEWKCorr(GetCorr(cWpHEwkCorrDown,bound(wBosons.Pt(),0,499.999)));

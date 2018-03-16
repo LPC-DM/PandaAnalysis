@@ -39,6 +39,7 @@ def fn(input_name, isData, full_path):
         processType = root.kTop
     analysis = deepgen() 
     analysis.processType=processType 
+#    analysis.deepAntiKtSort = True
     analysis.dump()
     skimmer.SetAnalysis(analysis)
     skimmer.isData=isData
@@ -77,19 +78,21 @@ if __name__ == "__main__":
         utils.stageout(outdir,outfilename.replace('.root','_arrays.root'),'arrays.root')
     utils.cleanup('*.root')
     if deep_utils.SAVE:
-        data = {}
-        for f in glob('*npz'):
-            f_data = deep_utils.np.load(f)
-            for k,v in f_data.iteritems():
-                if k not in data:
-                    data[k] = []
-                if v.shape[0] > 0:
-                    data[k].append(v)
-        if len(data['pt']) > 0:
-            merged_data = {k : deep_utils.np.concatenate(v) for k,v in data.iteritems()}
-            deep_utils.np.savez('merged_arrays.npz', **merged_data)
-            utils.print_time('merging npz')
-            ret = max(ret, utils.stageout(outdir, outfilename.replace('.root', '.npz'), 'merged_arrays.npz'))
+        if not ret:
+            data = {}
+            for f in glob('*npz'):
+                f_data = deep_utils.np.load(f)
+                for k,v in f_data.iteritems():
+                    if k not in data:
+                        data[k] = []
+                    if v.shape[0] > 0:
+                        data[k].append(v)
+            if len(data['pt']) > 0:
+                merged_data = {k : deep_utils.np.concatenate(v) for k,v in data.iteritems() if (k != 'singleton_branches')}
+                merged_data['singleton_branches'] = data['singleton_branches'][0] 
+                deep_utils.np.savez('merged_arrays.npz', **merged_data)
+                utils.print_time('merging npz')
+                ret = max(ret, utils.stageout(outdir, outfilename.replace('.root', '.npz'), 'merged_arrays.npz'))
         utils.cleanup('*.npz')
     utils.print_time('stageout and cleanup')
     if not ret:

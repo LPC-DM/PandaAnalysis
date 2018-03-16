@@ -206,11 +206,13 @@ def check(stdscr=None):
         init_colors()
         stdscr.nodelay(True)
     while True:
+        force_refresh = False
         if args.monitor:
             c = stdscr.getch()
             curses.flushinp()
             if c == ord('q'):
                 return
+            force_refresh = (c == ord('r'))
 
         global last_lock, last_check
         if time() - last_check > 5:
@@ -220,7 +222,7 @@ def check(stdscr=None):
                 recent_lock = 1
             last_check = time()
 
-        if (recent_lock >= last_lock) or (time() - last_lock > args.monitor):
+        if force_refresh or (recent_lock >= last_lock) or (time() - last_lock > args.monitor):
             # determine what files have been processed and logged as such
             processedfiles = []
             locks = glob(lockdir+'/*lock')
@@ -371,7 +373,7 @@ def check(stdscr=None):
             msg.append( '\nMost recent submission:')
             if args.monitor:
                 msg.extend([x+'\n' for x in query()])
-                msg.append('\nPress q to close')
+                msg.append('\nPress "r" to refresh or "q" to close')
             else:
                 msg.extend(query())
             msg.append('')

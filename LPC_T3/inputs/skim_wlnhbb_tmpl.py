@@ -29,8 +29,9 @@ def fn(input_name, isData, full_path):
     skimmer = root.PandaAnalyzer()
     analysis = wlnhbb(True)
     analysis.processType = utils.classify_sample(full_path, isData)	
-    if analysis.processType == root.kTT or analysis.processType == root.kH:
-        analysis.reclusterGen = True # only turn on if necessary
+    #if analysis.processType == root.kTT or analysis.processType == root.kH:
+    #    analysis.reclusterGen = True # only turn on if necessary
+    analysis.reclusterGen = True
     skimmer.SetAnalysis(analysis)
     skimmer.isData=isData
     skimmer.SetPreselectionBit(root.PandaAnalyzer.kVHBB)

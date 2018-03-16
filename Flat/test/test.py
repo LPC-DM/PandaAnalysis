@@ -17,18 +17,19 @@ argv = []
 
 import ROOT as root
 from PandaCore.Tools.Load import *
-from PandaAnalysis.Flat.analysis import deep, deepgen
-import PandaAnalysis.LPC_T3.job_utilities as utils
+from PandaAnalysis.Flat.analysis import *
 
 Load('PandaAnalyzer')
 
 skimmer = root.PandaAnalyzer(debug_level)
-a = deepgen()
-#a.deepGenGrid = True
-a.deepAntiKtSort = True
-a.processType=root.kTop
+#gghbb = gghbb()
+#gghbb.reclusterGen = False
+#gghbb.bjetRegression = False
+#gghbb.btagSFs = False
+#gghbb.deep = True
+#gghbb.dump()
+a = vv()
 skimmer.SetAnalysis(a)
-skimmer.SetPreselectionBit(root.PandaAnalyzer.kGenFatJet)
 
 skimmer.firstEvent=0
 skimmer.lastEvent=10
@@ -53,8 +54,3 @@ skimmer.SetOutputFile(output)
 
 skimmer.Run()
 skimmer.Terminate()
-
-#deep_utils.STORE = True
-#deep_utils.SAVE = True
-#deep_utils.NORM = False
-#deep_utils.run_model('testskim_pf_%i.root', 'testskim.root')

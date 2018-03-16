@@ -4,6 +4,7 @@
 <use   root=""/>
 <use   name="PandaTree/Objects"/>
 <use   name="PandaCore/Tools"/>
+<use   name="PandaAnalysis/Utilities"/>
 <use   name="CondFormats/BTauObjects"/>
 <use   name="CondTools/BTau"/>
 <use   name="CondFormats/JetMETObjects"/>

@@ -1,5 +1,8 @@
 <use   name="root"/>
 <use   root=""/>
+<use   name="fastjet"/>
+<use   name="fastjet-contrib"/>
+<use   name="PandaCore/Tools"/>
 <export>
   <lib   name="1"/>
 </export>

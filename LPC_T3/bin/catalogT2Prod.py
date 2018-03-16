@@ -9,7 +9,7 @@ from sys import argv
 import argparse
 
 parser = argparse.ArgumentParser(description='make config file')
-parser.add_argument('--catalog',type=str,default='/home/cmsprod/catalog/t2mit/pandaf/008')
+parser.add_argument('--catalog',type=str,default='/home/cmsprod/catalog/t2mit/pandaf/009')
 parser.add_argument('--user_catalog', action='store_true')
 parser.add_argument('--mc_catalog',type=str,default=None)
 parser.add_argument('--data_catalog',type=str,default=None)
@@ -116,6 +116,7 @@ def cat(catalog, condition=lambda x : True):
 cat(args.mc_catalog, lambda x : bool(match('.*SIM$', x)))
 cat(args.data_catalog, lambda x : bool(match('.*AOD$', x)))
 if args.user_catalog:
+    cat(args.catalog.replace('cmsprod',user))
     cat(args.catalog.replace('cmsprod',user).replace('t2','t3'))
 
 if len(could_not_find)>0:

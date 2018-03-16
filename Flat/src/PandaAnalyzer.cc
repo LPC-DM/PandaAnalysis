@@ -70,10 +70,11 @@ void PandaAnalyzer::SetOutputFile(TString fOutName)
 
   fOut->WriteTObject(hDTotalMCWeight);    
 
-  gt->monohiggs      = (analysis->monoh || analysis->hbb);
+  gt->monohiggs      = (analysis->boosted || analysis->hbb);
   gt->vbf            = analysis->vbf;
   gt->fatjet         = analysis->fatjet;
   gt->leptonic       = analysis->complicatedLeptons;
+  gt->photonic       = analysis->complicatedPhotons;
   gt->hfCounting     = analysis->hfCounting;
   gt->btagWeights    = analysis->btagWeights;
   gt->useCMVA        = analysis->useCMVA;
@@ -108,6 +109,8 @@ int PandaAnalyzer::Init(TTree *t, TH1D *hweights, TTree *weightNames)
   }
   tIn = t;
 
+  ////////////////////////////////////////////////////////////////////// 
+  // manipulate which branches to read
   event.setStatus(*t, {"!*"}); // turn everything off first
 
   TString jetname = (analysis->puppi_jets) ? "puppi" : "chs";
@@ -132,7 +135,8 @@ int PandaAnalyzer::Init(TTree *t, TH1D *hweights, TTree *weightNames)
     else if (analysis->fatjet) 
       readlist += {jetname+"CA15Jets", "subjets", jetname+"CA15Subjets","Subjets"};
     
-    if (analysis->recluster || analysis->bjetRegression || analysis->deep || analysis->hbb) {
+    if (analysis->recluster || analysis->bjetRegression || 
+        analysis->deep || analysis->hbb || analysis->complicatedPhotons) {
       readlist.push_back("pfCandidates");
     }
     if (analysis->deepTracks || analysis->bjetRegression || analysis->hbb) {
@@ -151,10 +155,12 @@ int PandaAnalyzer::Init(TTree *t, TH1D *hweights, TTree *weightNames)
     }
   }
 
-  /////
   event.setAddress(*t, readlist); // pass the readlist so only the relevant branches are turned on
   if (DEBUG) PDebug("PandaAnalyzer::Init","Set addresses");
 
+  ////////////////////////////////////////////////////////////////////// 
+
+  // read MC weights
   hDTotalMCWeight = new TH1F("hDTotalMCWeight","hDTotalMCWeight",1,0,2);
   hDTotalMCWeight->SetDirectory(0);
   hDTotalMCWeight->SetBinContent(1,hweights->GetBinContent(1));
@@ -179,7 +185,10 @@ int PandaAnalyzer::Init(TTree *t, TH1D *hweights, TTree *weightNames)
   }
 
 
+  ////////////////////////////////////////////////////////////////////// 
+
   // manipulate the output tree
+  gt->RemoveBranches({"ak81.*"}); // unused
   if (isData) {
     std::vector<TString> droppable = {"mcWeight","scale","scaleUp",
                                       "trueGenBosonPt",
@@ -193,20 +202,19 @@ int PandaAnalyzer::Init(TTree *t, TH1D *hweights, TTree *weightNames)
                                      "trueGenBosonPt","sf_qcd.*","sf_ewk.*"};
     gt->RemoveBranches({".*"},keepable);
   }
-
-  gt->RemoveBranches({"ak81.*"}); // unused
-  
-  if (analysis->recluster || analysis->reclusterGen || analysis->deep || analysis->deepGen || analysis->hbb) {
-    int activeAreaRepeats = 1;
-    double ghostArea = 0.01;
-    double ghostEtaMax = 7.0;
-    activeArea = new fastjet::GhostedAreaSpec(ghostEtaMax,activeAreaRepeats,ghostArea);
-    areaDef = new fastjet::AreaDefinition(fastjet::active_area_explicit_ghosts,*activeArea);
+  if (!analysis->fatjet && !analysis->ak8) {
+    gt->RemoveBranches({"fj1.*","nAK8jet*"});
+  }
+  if (analysis->complicatedLeptons) {
+    gt->RemoveBranches({"genJet.*","puppiU.*","pfU.*","dphipfU.*","dphipuppi.*","jet1.*","jet2.*"});
   }
 
-  if (!analysis->fatjet && !analysis->ak8) {
-    gt->RemoveBranches({"fj1.*"});
-  } else if (analysis->recluster || analysis->deep || analysis->deepGen) {
+
+  ////////////////////////////////////////////////////////////////////// 
+  
+  // remaining configuraiton of objects
+  if ((analysis->fatjet || analysis->ak8) || 
+      (analysis->recluster || analysis->deep || analysis->deepGen)) {
     double radius = 1.5;
     double sdZcut = 0.15;
     double sdBeta = 1.;
@@ -226,9 +234,23 @@ int PandaAnalyzer::Init(TTree *t, TH1D *hweights, TTree *weightNames)
     softDrop = new fastjet::contrib::SoftDrop(sdBeta,sdZcut,radius);
     tauN = new fastjet::contrib::Njettiness(fastjet::contrib::OnePass_KT_Axes(), 
                                             fastjet::contrib::NormalizedMeasure(1., radius));
-  } else { 
-    std::vector<TString> droppable = {"fj1NConst","fj1NSDConst","fj1EFrac100","fj1SDEFrac100"};
-    gt->RemoveBranches(droppable);
+
+    if (analysis->deepGen) {
+      ecfnMan = new pandaecf::ECFNManager();
+      if (analysis->deepGenGrid) {
+        grid = new ParticleGridder(250,157,5); // 0.02x0.02
+        // grid = new ParticleGridder(1000,628,5); // 0.005x0.005
+        // grid = new ParticleGridder(2500,1570,5); // 0.002x0.002
+      }
+    }
+  }
+
+  if (analysis->recluster || analysis->reclusterGen || analysis->deep || analysis->deepGen || analysis->hbb) {
+    int activeAreaRepeats = 1;
+    double ghostArea = 0.01;
+    double ghostEtaMax = 7.0;
+    activeArea = new fastjet::GhostedAreaSpec(ghostEtaMax,activeAreaRepeats,ghostArea);
+    areaDef = new fastjet::AreaDefinition(fastjet::active_area_explicit_ghosts,*activeArea);
   }
 
   if (analysis->deepTracks) {
@@ -283,7 +305,6 @@ void PandaAnalyzer::Terminate()
   fOut->Close();
   fOut = 0; tOut = 0;
 
-
   if (analysis->deep)
     IncrementAuxFile(true);
   if (analysis->deepGen)
@@ -303,7 +324,7 @@ void PandaAnalyzer::Terminate()
 
   delete btagCalib;
   delete sj_btagCalib;
-  for (auto *reader : btagReaders )
+  for (auto *reader : btagReaders)
     delete reader;
 
   for (auto& iter : ak8UncReader)
@@ -329,8 +350,11 @@ void PandaAnalyzer::Terminate()
 
   delete hDTotalMCWeight;
   
-  delete bjetreg_reader;
+  delete bjetregReader;
   delete rochesterCorrection;
+
+  delete ecfnMan;
+  delete grid;
 
   if (DEBUG) PDebug("PandaAnalyzer::Terminate","Finished with output");
 }
@@ -401,6 +425,8 @@ void PandaAnalyzer::SetDataDir(const char *s)
     OpenCorrection(cEleLoose,dirPath+"leptonic/scalefactors_80x_egpog_37ifb.root","scalefactors_Loose_Electron",2);
     OpenCorrection(cEleMedium,dirPath+"leptonic/scalefactors_80x_dylan_37ifb.root","scalefactors_Medium_Electron",2);
     OpenCorrection(cEleTight,dirPath+"leptonic/scalefactors_80x_egpog_37ifb.root","scalefactors_Tight_Electron",2);
+    OpenCorrection(cEleMvaWP90,dirPath+"leptonic/scalefactors_80x_egpog_37ifb.root","scalefactors_MediumMVA_Electron",2);
+    OpenCorrection(cEleMvaWP80,dirPath+"leptonic/scalefactors_80x_egpog_37ifb.root","scalefactors_TightMVA_Electron",2);
     OpenCorrection(cEleReco,dirPath+"leptonic/scalefactors_80x_egpog_37ifb.root","scalefactors_Reco_Electron",2);
     // EWK corrections 
     OpenCorrection(cWZEwkCorr,dirPath+"leptonic/data.root","hEWKWZCorr",1);
@@ -421,7 +447,7 @@ void PandaAnalyzer::SetDataDir(const char *s)
     OpenCorrection(cMuReco,dirPath+"moriond17/Tracking_12p9.root","htrack2",1);
   }
   // Differential Electroweak VH Corrections
-  if(analysis->hbb) {
+  if (analysis->hbb) {
     OpenCorrection(cWmHEwkCorr    ,dirPath+"higgs/Wm_nloEWK_weight_unnormalized.root","SignalWeight_nloEWK_rebin"     ,1);
     OpenCorrection(cWmHEwkCorrUp  ,dirPath+"higgs/Wm_nloEWK_weight_unnormalized.root","SignalWeight_nloEWK_up_rebin"  ,1);
     OpenCorrection(cWmHEwkCorrDown,dirPath+"higgs/Wm_nloEWK_weight_unnormalized.root","SignalWeight_nloEWK_down_rebin",1);
@@ -531,6 +557,11 @@ void PandaAnalyzer::SetDataDir(const char *s)
     btagReaders[bJetM]->load(*btagCalib,BTagEntry::FLAV_B,"comb");
     btagReaders[bJetM]->load(*btagCalib,BTagEntry::FLAV_C,"comb");
     btagReaders[bJetM]->load(*btagCalib,BTagEntry::FLAV_UDSG,"incl");
+    
+    btagReaders[bSubJetM] = new BTagCalibrationReader(BTagEntry::OP_MEDIUM,"central",{"up","down"});
+    btagReaders[bSubJetM]->load(*sj_btagCalib,BTagEntry::FLAV_B,"lt");
+    btagReaders[bSubJetM]->load(*sj_btagCalib,BTagEntry::FLAV_C,"lt");
+    btagReaders[bSubJetM]->load(*sj_btagCalib,BTagEntry::FLAV_UDSG,"incl");
 
     if (DEBUG) PDebug("PandaAnalyzer::SetDataDir","Loaded btag SFs");
   } 
@@ -546,29 +577,29 @@ void PandaAnalyzer::SetDataDir(const char *s)
   // bjet regression
   if (analysis->bjetRegression) {
     bjetreg_vars = new float[10];
-    bjetreg_reader = new TMVA::Reader("!Color:!Silent");
+    bjetregReader = new TMVA::Reader("!Color:!Silent");
 
-    bjetreg_reader->AddVariable("jetPt[hbbjtidx[0]]",&bjetreg_vars[0]);
-    bjetreg_reader->AddVariable("nJot",&bjetreg_vars[1]);
-    bjetreg_reader->AddVariable("jetEta[hbbjtidx[0]]",&bjetreg_vars[2]);
-    bjetreg_reader->AddVariable("jetE[hbbjtidx[0]]",&bjetreg_vars[3]);
-    bjetreg_reader->AddVariable("npv",&bjetreg_vars[4]);
-    bjetreg_reader->AddVariable("jetLeadingTrkPt[hbbjtidx[0]]",&bjetreg_vars[5]);
-    bjetreg_reader->AddVariable("jetLeadingLepPt[hbbjtidx[0]]",&bjetreg_vars[6]);
-    bjetreg_reader->AddVariable("jetNLep[hbbjtidx[0]]",&bjetreg_vars[7]);
-    bjetreg_reader->AddVariable("jetEMFrac[hbbjtidx[0]]",&bjetreg_vars[8]);
-    bjetreg_reader->AddVariable("jetHadFrac[hbbjtidx[0]]",&bjetreg_vars[9]);
+    bjetregReader->AddVariable("jetPt[hbbjtidx[0]]",&bjetreg_vars[0]);
+    bjetregReader->AddVariable("nJot",&bjetreg_vars[1]);
+    bjetregReader->AddVariable("jetEta[hbbjtidx[0]]",&bjetreg_vars[2]);
+    bjetregReader->AddVariable("jetE[hbbjtidx[0]]",&bjetreg_vars[3]);
+    bjetregReader->AddVariable("npv",&bjetreg_vars[4]);
+    bjetregReader->AddVariable("jetLeadingTrkPt[hbbjtidx[0]]",&bjetreg_vars[5]);
+    bjetregReader->AddVariable("jetLeadingLepPt[hbbjtidx[0]]",&bjetreg_vars[6]);
+    bjetregReader->AddVariable("jetNLep[hbbjtidx[0]]",&bjetreg_vars[7]);
+    bjetregReader->AddVariable("jetEMFrac[hbbjtidx[0]]",&bjetreg_vars[8]);
+    bjetregReader->AddVariable("jetHadFrac[hbbjtidx[0]]",&bjetreg_vars[9]);
 
     gSystem->Exec(
         Form("wget -O %s/trainings/bjet_regression_v0.weights.xml http://t3serv001.mit.edu/~snarayan/pandadata/trainings/bjet_regression_v0.weights.xml",dirPath.Data())
       );
-    bjetreg_reader->BookMVA( "BDT method", dirPath+"trainings/bjet_regression_v0.weights.xml" );
+    bjetregReader->BookMVA( "BDT method", dirPath+"trainings/bjet_regression_v0.weights.xml" );
 
     if (DEBUG) PDebug("PandaAnalyzer::SetDataDir","Loaded bjet regression weights");
   }
 
 
-  if (analysis->monoh || analysis->hbb) {
+  if (analysis->boosted || analysis->hbb) {
     // mSD corr
     MSDcorr = new TFile(dirPath+"/puppiCorr.root");
     puppisd_corrGEN = (TF1*)MSDcorr->Get("puppiJECcorr_gen");;
@@ -709,7 +740,7 @@ bool PandaAnalyzer::PassPreselection()
   }
 
   else if (preselBits & kLeptonFake) {
-    bool passFakeTrigger = (gt->trigger & kMuFakeTrig) != 0 || (gt->trigger & kEleFakeTrig) != 0;
+    bool passFakeTrigger = (gt->trigger & (1<<kMuFakeTrig)) != 0 || (gt->trigger & (1<<kEleFakeTrig)) != 0;
     if (passFakeTrigger == true) {
       double mll = 0.0;
       if (gt->nLooseLep == 2) {
@@ -786,7 +817,7 @@ bool PandaAnalyzer::PassPreselection()
     if (
       bestMet>150 && 
       bestLeadingJet>50 && bestSubLeadingJet>25 &&
-      (gt->hbbpt>50 || (gt->nFatjet>0 && gt->fj1Pt>200))
+      (gt->hbbpt>50 || gt->nFatjet>0)
     ) isGood=true;
     // WlnHbb
     else if (
@@ -795,7 +826,7 @@ bool PandaAnalyzer::PassPreselection()
        (gt->nTightElectron >0 && gt->electronPt[0]>25) ||
        (gt->nTightMuon > 0 && gt->muonPt[0]>25)
       ) &&
-      (gt->hbbpt>50 || (gt->nFatjet>0 && gt->fj1Pt>200))
+      (gt->hbbpt>50 || gt->nFatjet>0)
     ) isGood=true;
     // ZllHbb
     else if (
@@ -813,7 +844,7 @@ bool PandaAnalyzer::PassPreselection()
         gt->muonPt[1]>20 
        )
       ) &&
-      (gt->hbbpt>50 || (gt->nFatjet>0 && gt->fj1Pt>200))
+      (gt->hbbpt>50 || gt->nFatjet>0)
     ) isGood=true;
   }
 
@@ -1136,6 +1167,7 @@ void PandaAnalyzer::Run()
         tAux->Fill();
       if (tAux->GetEntriesFast() == 2500)
         IncrementGenAuxFile();
+      tr->TriggerEvent("fill gen aux");
     }
 
 
@@ -1148,7 +1180,11 @@ void PandaAnalyzer::Run()
       }
       
       // photons
-      Photons();
+      if (analysis->complicatedPhotons) {
+        ComplicatedPhotons();
+      } else {
+        SimplePhotons();
+      }
 
       // recoil!
       if (analysis->recoil)
@@ -1193,7 +1229,8 @@ void PandaAnalyzer::Run()
         
         TriggerEffs();
 
-        if (analysis->complicatedLeptons) 
+        if (analysis->complicatedLeptons ||
+            analysis->complicatedPhotons)
           GenStudyEWK();
         else
           LeptonSFs();
@@ -1231,10 +1268,13 @@ void PandaAnalyzer::Run()
       tAux->Fill();
       if (tAux->GetEntriesFast() == 2500)
         IncrementAuxFile();
+      tr->TriggerEvent("aux fill");
     }
 
     gt->Fill();
     
+    tr->TriggerEvent("fill");
+
   } // entry loop
 
   tr->Summary();

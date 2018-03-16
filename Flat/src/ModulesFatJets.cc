@@ -10,11 +10,6 @@
 using namespace panda;
 using namespace std;
 
-struct JetHistory {
-  int user_idx;
-  int child_idx;
-};
-
 void PandaAnalyzer::FatjetPartons() 
 {
   gt->fj1NPartons = 0;
@@ -299,12 +294,23 @@ void PandaAnalyzer::FatjetBasics()
     float eta = fj.eta();
     float mass = fj.m();
     float ptcut = 200;
-    if (analysis->monoh)
+    if (analysis->boosted)
       ptcut = 200;
     if (analysis->deep)
       ptcut = 400;
-
-    if (pt<ptcut || fabs(eta)>2.4 || !fj.monojet)
+    
+    // Here, we require the Fatjet pt's to be larger than some nominal value, ptcut
+    // if flag rerunJES is on, Fatjets will pass if their JES uncertainties could
+    // put them over the threshold.
+    // However, this does not account for the smearing pushing a jet over the threshold,
+    // so the analysis fatjet pt threshold must be sufficiently larger than this number
+    // if the JER uncertainty is to be considered properly.
+    float bestPt = pt;
+    if (analysis->rerunJES) {
+      bestPt = TMath::Max(bestPt, fj.ptCorrUp);
+      bestPt = TMath::Max(bestPt, fj.ptCorrDown);
+    }
+    if (bestPt<ptcut || fabs(eta)>2.4 || !fj.monojet)
       continue;
 
     float phi = fj.phi();
@@ -394,7 +400,8 @@ void PandaAnalyzer::FatjetBasics()
         gt->fj1MSDSmeared_sj = gt->fj1MSD * (sjSumSmear.Pt()/sjSum.Pt());
       }
 
-      if (analysis->monoh) {
+      if (analysis->boosted || analysis->hbb) {
+       
         // mSD correction
         float corrweight=1.;
         corrweight = GetMSDCorr(pt,eta);
@@ -440,7 +447,7 @@ void PandaAnalyzer::FatjetBasics()
       }
 
       gt->fj1DoubleCSV = fj.double_sub;
-      if (analysis->monoh) {
+      if (analysis->boosted) {
         for (unsigned int iSJ=0; iSJ!=fj.subjets.size(); ++iSJ) {
           auto& subjet = fj.subjets.objAt(iSJ);
           gt->fj1sjPt[iSJ]=subjet.pt();
@@ -751,7 +758,10 @@ void PandaAnalyzer::FatjetMatching()
         } else {
           eff = lfeff[bineta][binpt];
         }
-        CalcBJetSFs(bSubJetL,flavor,eta,pt,eff,btagUncFactor,sf,sfUp,sfDown);
+        if (analysis->hbb)
+          CalcBJetSFs(bSubJetM,flavor,eta,pt,eff,btagUncFactor,sf,sfUp,sfDown);
+        else
+          CalcBJetSFs(bSubJetL,flavor,eta,pt,eff,btagUncFactor,sf,sfUp,sfDown);
         sj_btagcands.push_back(btagcand(iSJ,flavor,eff,sf,sfUp,sfDown));
         sj_sf_cent.push_back(sf);
         if (flavor>0) {
@@ -763,12 +773,11 @@ void PandaAnalyzer::FatjetMatching()
         }
 
       } // loop over subjets
-
-      EvalBTagSF(sj_btagcands,sj_sf_cent,GeneralTree::bCent,GeneralTree::bSubJet);
-      EvalBTagSF(sj_btagcands,sj_sf_bUp,GeneralTree::bBUp,GeneralTree::bSubJet);
-      EvalBTagSF(sj_btagcands,sj_sf_bDown,GeneralTree::bBDown,GeneralTree::bSubJet);
-      EvalBTagSF(sj_btagcands,sj_sf_mUp,GeneralTree::bMUp,GeneralTree::bSubJet);
-      EvalBTagSF(sj_btagcands,sj_sf_mDown,GeneralTree::bMDown,GeneralTree::bSubJet);
+      EvalBTagSF(sj_btagcands,sj_sf_cent,GeneralTree::bCent,GeneralTree::bSubJet,true);
+      EvalBTagSF(sj_btagcands,sj_sf_bUp,GeneralTree::bBUp,GeneralTree::bSubJet,true);
+      EvalBTagSF(sj_btagcands,sj_sf_bDown,GeneralTree::bBDown,GeneralTree::bSubJet,true);
+      EvalBTagSF(sj_btagcands,sj_sf_mUp,GeneralTree::bMUp,GeneralTree::bSubJet,true);
+      EvalBTagSF(sj_btagcands,sj_sf_mDown,GeneralTree::bMDown,GeneralTree::bSubJet,true);
     }
 
   }
