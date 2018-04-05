@@ -52,12 +52,17 @@ void PandaAnalyzer::JetBasics()
   gt->dphipuppiUA=999; gt->dphipfUA=999;
   float maxJetEta = (analysis->vbf) ? 4.7 : 4.5;
   unsigned nJetDPhi = (analysis->vbf) ? 4 : 5;
+  float maxJetEtaMJ = (analysis->monojet) ? 2.5 : 4.5;
+  unsigned nJetDPhiMJ = (analysis->monojet) ? 4 : 5;
+  
 
   gt->badECALFilter = 1;
   for (auto& jet : *jets) {
 
     // only do eta-phi checks here
     if (abs(jet.eta()) > maxJetEta)
+      continue;
+    if (abs(jet.eta()) > maxJetEtaMJ) 
       continue;
     // NOTE:
     // For VBF we require nTightLep>0, but in monotop looseLep1IsTight
@@ -67,6 +72,8 @@ void PandaAnalyzer::JetBasics()
         IsMatched(&matchPhos,0.16,jet.eta(),jet.phi()))
       continue;
     if (analysis->vbf && !jet.loose)
+      continue;
+    if (analysis->monojet && !jet.loose)
       continue;
 
 
@@ -475,6 +482,24 @@ void PandaAnalyzer::JetVBFSystem()
 
 void PandaAnalyzer::JetHbbReco() 
 {
+/* if (centralJets.size() > 1) {
+    vector<Jet*> btagSortedJets = centralJets;
+    sort(
+      btagSortedJets.begin(),
+      btagSortedJets.end(),
+      analysis->useCMVA?
+        [](panda::Jet *x, panda::Jet *y) -> bool { return x->cmva > y->cmva; } :
+        [](panda::Jet *x, panda::Jet *y) -> bool { return x->csv  > y->csv ; }
+    );
+    map<Jet*, unsigned> order;
+    for (unsigned i = 0; i != cleanedJets.size(); ++i) 
+      order[cleanedJets[i]] = i;
+
+    // the 2 best b-tagged central jets
+    panda::Jet *jet_1 = btagSortedJets.at(0);
+    panda::Jet *jet_2 = btagSortedJets.at(1);
+  }
+*/
   float tmp_bosonpt=-99;
   float tmp_bosoneta=-99;
   float tmp_bosonphi=-99;
@@ -553,31 +578,33 @@ void PandaAnalyzer::JetHbbReco()
         // Don't propagate the JES uncertainty to the hardest track/lepton or the EM fraction for now
         bjetreg_vars[0] = gt->jetPtUp[gt->bosonjtidx[i]];
         bjetreg_vars[3] = gt->jetE[gt->bosonjtidx[i]] * gt->jetPtUp[gt->bosonjtidx[i]] / gt->jetPt[gt->bosonjtidx[i]];
-        gt->jetRegFac[i] = (bjetreg_reader->EvaluateRegression("BDT method"))[0];
+        //gt->jetRegFac[i] = (bjetreg_reader->EvaluateRegression("BDT method"))[0];
         bosondaughters_corr_jesUp[i].SetPtEtaPhiM(
           gt->jetRegFac[i]*gt->jetPtUp[gt->bosonjtidx[i]],
           gt->jetEta[gt->bosonjtidx[i]],
           gt->jetPhi[gt->bosonjtidx[i]],
-          btagSortedJets.at(i)->m()
+          gt->jetM[gt->bosonjtidx[i]]
+          //btagSortedJets.at(i)->m()
         );
         // B-jet regression with jet energy varied down
         bjetreg_vars[0] = gt->jetPtDown[gt->bosonjtidx[i]];
         bjetreg_vars[3] = gt->jetE[gt->bosonjtidx[i]] * gt->jetPtDown[gt->bosonjtidx[i]] / gt->jetPt[gt->bosonjtidx[i]];
-        gt->jetRegFac[i] = (bjetreg_reader->EvaluateRegression("BDT method"))[0];
+        //gt->jetRegFac[i] = (bjetreg_reader->EvaluateRegression("BDT method"))[0];
         bosondaughters_corr_jesDown[i].SetPtEtaPhiM(
           gt->jetRegFac[i]*gt->jetPtDown[gt->bosonjtidx[i]],
           gt->jetEta[gt->bosonjtidx[i]],
           gt->jetPhi[gt->bosonjtidx[i]],
-          btagSortedJets.at(i)->m()
+          gt->jetM[gt->bosonjtidx[i]]
         );
         // B-jet regression with central value for jet energy
         // Call this last so that the central value for jetRegFac[i] is stored in gt
-        gt->jetRegFac[i] = (bjetreg_reader->EvaluateRegression("BDT method"))[0];
+        //gt->jetRegFac[i] = (bjetreg_reader->EvaluateRegression("BDT method"))[0];
         bosondaughters_corr[i].SetPtEtaPhiM(
           gt->jetRegFac[i]*gt->jetPt[gt->bosonjtidx[i]],
           gt->jetEta[gt->bosonjtidx[i]],
           gt->jetPhi[gt->bosonjtidx[i]],
-          btagSortedJets.at(i)->m()
+          gt->jetM[gt->bosonjtidx[i]]
+          //btagSortedJets.at(i)->m()
         );
 
       }

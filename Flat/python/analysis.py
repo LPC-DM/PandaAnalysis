@@ -48,6 +48,11 @@ resolved = lambda v=False : _analysis(
 monojet = lambda v=False : _analysis(
         name = 'monojet',
         verbose = v,
+        monojet = True,
+        hfCounting = True,
+        jetFlavorJets = True,
+        btagWeights = True,
+        useCMVA = True,
     )
 
 lepmonotop = lambda v=False : _analysis(
