@@ -762,6 +762,7 @@ void GeneralTree::WriteTree(TTree *t) {
     Book("sf_metTrigZmm",&sf_metTrigZmm,"sf_metTrigZmm/F");
     Book("sf_qcdV_VBF",&sf_qcdV_VBF,"sf_qcdV_VBF/F");
   }
+
   Book("scale",scale,"scale[6]/F");
 
   for (auto p : ecfParams) { 

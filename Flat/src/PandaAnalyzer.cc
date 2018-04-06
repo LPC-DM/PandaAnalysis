@@ -78,7 +78,7 @@ void PandaAnalyzer::SetOutputFile(TString fOutName)
   gt->hfCounting     = analysis->hfCounting;
   gt->btagWeights    = analysis->btagWeights;
   gt->useCMVA        = analysis->useCMVA;
-
+  gt->monojet        = analysis->monojet;
   if (analysis->deep) {
     auxFilePath = fOutName.ReplaceAll(".root","_pf_%u.root");
     IncrementAuxFile();
@@ -271,7 +271,6 @@ int PandaAnalyzer::Init(TTree *t, TH1D *hweights, TTree *weightNames)
   if (analysis->hbb) jetPtThreshold=20;
   if (analysis->vbf || analysis->hbb || analysis->complicatedLeptons) 
     bJetPtThreshold=20;
-
   if (DEBUG) PDebug("PandaAnalyzer::Init","Finished configuration");
 
   return 0;
@@ -1213,7 +1212,7 @@ void PandaAnalyzer::Run()
 
       if (analysis->hbb) {
         // Higgs reconstruction for resolved analysis - highest pt pair of b jets
-        JetHbbReco();
+        //JetHbbReco();
       }
 
       Taus();
