@@ -12,8 +12,8 @@ cuts = {
     'nLep2' : tAND(presel,'nLooseLep==2 && mT>=160'),
     }
 
-cuts['signale']   = tAND(nLep_e,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
-cuts['signalm']   = tAND(nLep_m,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
+cuts['signale']  = tAND(nLep_e,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
+cuts['signalm']  = tAND(nLep_m,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
 cuts['wen']      = tAND(nLep_e,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==0')
 cuts['wmn']      = tAND(nLep_m,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==0')
 cuts['ttbar1e']  = tAND(nLep_e,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==2')
@@ -24,7 +24,7 @@ cuts['ttbar2lm'] = tAND(nLep2,'nTightElectron==1 && Sum$(jetCSV>0.8 && abs(jetEt
 weights = {
     'signale'  : '%f*sf_pu*sf_tt*normalizedWeight*sf_lepID*sf_lepIso*sf_lepTrack*sf_ewkV*sf_qcdV*sf_qcdTT*sf_btag1*sf_eleTrig',
     'signalm'  : '%f*sf_pu*sf_tt*normalizedWeight*sf_lepID*sf_lepIso*sf_lepTrack*sf_ewkV*sf_qcdV*sf_qcdTT*sf_btag1*sf_muTrig',
-    'control'     : '%f*sf_pu*sf_tt*normalizedWeight*sf_lepID*sf_lepIso*sf_lepTrack*sf_ewkV*sf_qcdV*sf_qcdTT',
+    'control'  : '%f*sf_pu*sf_tt*normalizedWeight*sf_lepID*sf_lepIso*sf_lepTrack*sf_ewkV*sf_qcdV*sf_qcdTT',
 }
 
 for x in ['wen','wmn','ttbar1e','ttbar1m','ttbar2le','ttbar2lm']:

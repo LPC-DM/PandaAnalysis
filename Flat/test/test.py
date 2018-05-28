@@ -23,10 +23,10 @@ from PandaAnalysis.Flat.analysis import *
 Load('PandaAnalyzer')
 
 skimmer = root.PandaAnalyzer(debug_level)
-analysis = resolved(True)
+analysis = lepmonotop(True)
 skimmer.SetAnalysis(analysis)
 skimmer.firstEvent=0
-skimmer.lastEvent=10
+skimmer.lastEvent=1000
 skimmer.isData=False
 skimmer.SetPreselectionBit(root.PandaAnalyzer.kResolved)
 if skimmer.isData:

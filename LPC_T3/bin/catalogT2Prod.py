@@ -9,7 +9,9 @@ from sys import argv
 import argparse
 
 parser = argparse.ArgumentParser(description='make config file')
-parser.add_argument('--catalog',type=str,default='/uscms_data/d3/lpcmetx/catalog/80x-v1')
+#parser.add_argument('--catalog',type=str,default='/uscms_data/d3/lpcmetx/catalog/80x-v1')
+parser.add_argument('--catalog',type=str,default='/uscms_data/d3/lpcmetx/test-Diana')
+#parser.add_argument('--catalog',type=str,default='/eos/uscms/store/group/lpcmetx/pandaprod/80X-v1/')
 parser.add_argument('--user_catalog', action='store_true')
 parser.add_argument('--mc_catalog',type=str,default=None)
 parser.add_argument('--data_catalog',type=str,default=None)
@@ -50,7 +52,8 @@ class CatalogSample:
             book_ = '/'.join(args.catalog.split('/')[-2:])
             lines.append('{0:<25} {2:<10} {3:<15} {1}\n'.format(nickname,f,self.dtype,self.xsec)) 
             if smartcache_args is not None:
-                if not path.isfile(f.replace('root://xrootd.cmsaf.mit.edu','/mnt/hadoop/cms')):
+                #if not path.isfile(f.replace('root://xrootd.cmsaf.mit.edu','/mnt/hadoop/cms')):
+                if not path.isfile(f.replace('root://cmseos.fnal.gov/','/mnt/hadoop/cms')):
                     smartcache_args.append('--file %s --dataset %s --book %s'%(f_,ds_,book_))
         return lines
 
