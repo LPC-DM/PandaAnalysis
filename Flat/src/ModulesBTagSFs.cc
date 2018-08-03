@@ -208,6 +208,7 @@ void PandaAnalyzer::JetCMVAWeights()
   std::vector<double> jetPts, jetEtas, jetCSVs, jetCMVAs;
   std::vector<int> jetFlavors;
   unsigned int nJ = bCandJets.size();
+  //cout<<"nJ= "<<nJ<<endl; 
   jetPts.reserve(nJ);
   jetEtas.reserve(nJ);
   jetCSVs.reserve(nJ);
@@ -221,6 +222,7 @@ void PandaAnalyzer::JetCMVAWeights()
     jetCMVAs.push_back(jet->cmva);
     int flavor = bCandJetGenFlavor[jet];
     jetFlavors.push_back(flavor);
+    //cout<<"jetCSV= "<<jet->csv<<endl; 
   }
   // throwaway addresses
   double csvWgtHF, csvWgtLF, csvWgtCF, cmvaWgtHF, cmvaWgtLF, cmvaWgtCF;

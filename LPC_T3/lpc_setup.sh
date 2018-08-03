@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ANALYSIS=$1
-
+REGION=$2
 if [ -z "$ANALYSIS" ];then
     echo -e "\033[0;31m Environment is not correctly setup \033[0m"
     echo -e "Please specify Analysis: \033[0;33m boosted \033[0m ; \033[1;36m resolved \033[0m ; \033[1;35m monojet \033[0m"
@@ -15,6 +15,12 @@ elif [ "$ANALYSIS" == "resolved" ];then
 elif [ "$ANALYSIS" == "monojet" ];then
     COLOR="\033[1;35m"
 fi
+
+if [ -z "$REGION" ];then
+    echo -e "\033[0;31m Environment is not correctly setup \033[0m"
+    echo -e "Please specify region: \033[0;33m met \033[0m ; \033[1;36m singleele \033[0m ; \033[1;35m singlemu \033[0m ; \033[1;35m diele \033[0m ; \033[1;35m dimu \033[0m ; \033[1;35m pho \033[0m"
+    exit 0
+fi
                                                                                                                             
 export PATH=${PATH}:${CMSSW_BASE}/src/PandaCore/bin/
 
@@ -24,19 +30,17 @@ export SUBMIT_NAME="80X-v1dot1"
 export scratch_area="/uscms_data/d3"
 export PANDA="${CMSSW_BASE}/src/PandaAnalysis"
 #cfg file
-#export PANDA_CFG="http://sundleeb.web.cern.ch/sundleeb/panda_config/20180710.cfg"
-##DY-400-600
-export PANDA_CFG="http://sundleeb.web.cern.ch/sundleeb/panda_config/20180713.cfg"
+export PANDA_CFG="http://sundleeb.web.cern.ch/sundleeb/panda_config/20180801_${REGION}.cfg"
 
 #skim
-export SUBMIT_TMPL="skim_${ANALYSIS}_tmpl.py"
+export SUBMIT_TMPL="skim_${ANALYSIS}_${REGION}_tmpl.py"
 #panda's 
-export PANDA_FLATDIR="/uscms_data/d1/${USER}/panda/${SUBMIT_NAME}/${ANALYSIS}/flat/"
-export SUBMIT_OUTDIR="/store/user/lpcmetx/panda/${SUBMIT_NAME}/${ANALYSIS}/batch/" 
+export PANDA_FLATDIR="/uscms_data/d1/${USER}/panda/${SUBMIT_NAME}/${ANALYSIS}_${REGION}/flat/"
+export SUBMIT_OUTDIR="/store/user/lpcmetx/panda/${SUBMIT_NAME}/${ANALYSIS}_${REGION}/batch/" 
 
 #condor's
-export SUBMIT_WORKDIR="${scratch_area}/lpcmetx/condor/${SUBMIT_NAME}/${ANALYSIS}/work/"
-export SUBMIT_LOGDIR="${scratch_area}/lpcmetx/condor/${SUBMIT_NAME}/${ANALYSIS}/logs/"
+export SUBMIT_WORKDIR="${scratch_area}/lpcmetx/condor/${SUBMIT_NAME}/${ANALYSIS}_${REGION}/work/"
+export SUBMIT_LOGDIR="${scratch_area}/lpcmetx/condor/${SUBMIT_NAME}/${ANALYSIS}_${REGION}/logs/"
 mkdir -p $PANDA_FLATDIR $SUBMIT_WORKDIR $SUBMIT_LOGDIR
 eosmkdir -p $SUBMIT_OUTDIR
 

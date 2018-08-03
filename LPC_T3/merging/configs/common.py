@@ -3,7 +3,7 @@ d = {
 
     'MET'                 : ['MET'],
     'SingleElectron'      : ['SingleElectron'],
-    'SingleMuon'      : ['SingleMuon'],
+    'SingleMuon'          : ['SingleMuon'],
     'DoubleEG'            : ['DoubleEG'],
     'SinglePhoton'        : ['SinglePhoton'],
 

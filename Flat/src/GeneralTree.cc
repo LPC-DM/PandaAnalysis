@@ -977,6 +977,7 @@ void GeneralTree::WriteTree(TTree *t) {
   Book("puppiUmag",&puppiUmag,"puppiUmag/F");
   Book("puppiUphi",&puppiUphi,"puppiUphi/F");
   Book("pfUWmag",&pfUWmag,"pfUWmag/F");
+  Book("pfUWWmag",&pfUWWmag,"pfUWWmag/F");
   Book("pfUWphi",&pfUWphi,"pfUWphi/F");
   Book("pfUZmag",&pfUZmag,"pfUZmag/F");
   Book("pfUZphi",&pfUZphi,"pfUZphi/F");
@@ -990,6 +991,7 @@ void GeneralTree::WriteTree(TTree *t) {
   Book("dphipuppiUZ",&dphipuppiUZ,"dphipuppiUZ/F");
   Book("dphipuppiUA",&dphipuppiUA,"dphipuppiUA/F");
   Book("dphipfUW",&dphipfUW,"dphipfUW/F");
+  Book("dphipfUWW",&dphipfUWW,"dphipfUWW/F");
   Book("dphipfUZ",&dphipfUZ,"dphipfUZ/F");
   Book("dphipfUA",&dphipfUA,"dphipfUA/F");
   Book("dphipuppiU",&dphipuppiU,"dphipuppiU/F");

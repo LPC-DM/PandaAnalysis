@@ -31,7 +31,7 @@ def fn(input_name, isData, full_path):
     analysis.genOnly = False
     skimmer.SetAnalysis(analysis)
     skimmer.isData = isData
-    skimmer.SetPreselectionBit(root.PandaAnalyzer.kMET)
+    skimmer.SetPreselectionBit(root.PandaAnalyzer.kDiEle)
 
     return utils.run_PandaAnalyzer(skimmer, isData, input_name)
 

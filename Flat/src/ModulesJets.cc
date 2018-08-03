@@ -180,7 +180,7 @@ void PandaAnalyzer::JetBasics()
         if (analysis->vbf || analysis->complicatedLeptons)
           JetVBFBasics(jet);
 
-        if (analysis->boosted || analysis->boson) {
+        if (analysis->boosted || analysis->boson || analysis->monojet || analysis->lepmonotop) {
           JetHbbBasics(jet);
           if (analysis->bjetRegression)
             JetBRegressionInfo(jet);
@@ -262,6 +262,7 @@ void PandaAnalyzer::JetHbbBasics(panda::Jet& jet)
   gt->jetPtDown[N]=jet.ptCorrDown;
   gt->jetEta[N]=jet.eta();
   gt->jetPhi[N]=jet.phi();
+  gt->jetM[N]=jet.m();
   gt->jetE[N]=jet.e();
   gt->jetCSV[N]=csv;
   gt->jetCMVA[N]=cmva;

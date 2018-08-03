@@ -146,7 +146,18 @@ the environment variables are configured in PandaAnalyzer/LPC_T3/lpc_setup.sh
 
 To submit jobs, simply do
 ```bash 
-source lpc_setup.sh
+source lpc_setup.sh $ANALYSIS $REGION
+```
+```bash 
+$ANALYSIS can be one of [boosted resolved monojet]
+```
+and
+```
+$REGION can be one of [met singleele singlemu diele dimu pho] 
+```
+e.g. in order to run the job for monojet analysis in met region do the setup as follows:
+```
+source lpc_setup.sh monojet met
 ```
 In order to prepare the job with grid authentication, go to PandaAnalyzer/LPC_T3/bin/
 ```bash
@@ -169,7 +180,7 @@ Output files reside in LPC EOS area.
 
 Make sure `$PANDA_FLATDIR` exists. Then, go into `LPC_T3/merging` and do:
 ```bash
-./merge.py
+./merge.sh
 ```
 or
 ```bash
