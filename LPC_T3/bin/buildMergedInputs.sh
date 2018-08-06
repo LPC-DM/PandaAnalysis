@@ -45,7 +45,8 @@ cp -v ${SUBMIT_TMPL} ${WD}/skim.py
 chmod 775 ${WD}/skim.py
 
 PInfo -n "$0" "Finalizing work area..."
-voms-proxy-init -voms cms --valid 168:00
+cat $HOME/private/$USER.txt | voms-proxy-init -voms cms --valid 168:00 -pwstdin
+#voms-proxy-init -voms cms --valid 168:00 
 cp -v /tmp/x509up_u$UID $WD/x509up
 
 cp -v ${CMSSW_BASE}/src/PandaAnalysis/LPC_T3/inputs/exec.sh ${WD}

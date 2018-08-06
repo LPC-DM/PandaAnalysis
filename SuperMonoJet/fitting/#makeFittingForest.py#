@@ -210,8 +210,5 @@ factory.run(forestDir+'/fittingForest_%s.root'%region)
 
 #Computing n2ddt variables in the ntuples stored inside the basedir directory
 if nddt:
-    print 'adding n2ddt'
     addN2DDT(forestDir+'/fittingForest_%s.root'%region)
-if drddt:
-    print 'adding drddt'
-    addN2DDT(forestDir+'/fittingForest_%s.root'%region)
+

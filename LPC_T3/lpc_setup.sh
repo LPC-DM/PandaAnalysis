@@ -35,12 +35,12 @@ export PANDA_CFG="http://sundleeb.web.cern.ch/sundleeb/panda_config/20180801_${R
 #skim
 export SUBMIT_TMPL="skim_${ANALYSIS}_${REGION}_tmpl.py"
 #panda's 
-export PANDA_FLATDIR="/uscms_data/d1/${USER}/panda/${SUBMIT_NAME}/${ANALYSIS}_${REGION}/flat/"
+export PANDA_FLATDIR="/uscms_data/d3/${USER}/panda/${SUBMIT_NAME}/${ANALYSIS}_${REGION}/flat/"
 export SUBMIT_OUTDIR="/store/user/lpcmetx/panda/${SUBMIT_NAME}/${ANALYSIS}_${REGION}/batch/" 
 
 #condor's
-export SUBMIT_WORKDIR="${scratch_area}/lpcmetx/condor/${SUBMIT_NAME}/${ANALYSIS}_${REGION}/work/"
-export SUBMIT_LOGDIR="${scratch_area}/lpcmetx/condor/${SUBMIT_NAME}/${ANALYSIS}_${REGION}/logs/"
+export SUBMIT_WORKDIR="${scratch_area}/lpcmetx/condor/${SUBMIT_NAME}/${ANALYSIS}_${REGION}_1/work/"
+export SUBMIT_LOGDIR="${scratch_area}/lpcmetx/condor/${SUBMIT_NAME}/${ANALYSIS}_${REGION}_1/logs/"
 mkdir -p $PANDA_FLATDIR $SUBMIT_WORKDIR $SUBMIT_LOGDIR
 eosmkdir -p $SUBMIT_OUTDIR
 

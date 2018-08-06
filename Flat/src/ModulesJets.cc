@@ -361,9 +361,9 @@ void PandaAnalyzer::IsoJet(panda::Jet& jet)
       gt->isojet2Pt = jet.pt();
       gt->isojet2CSV = jet.csv;
     }
-      gt->jetIso[cleanedJets.size()-1]=1;
+    gt->jetIso[cleanedJets.size()-1]=1;
   } else {
-      gt->jetIso[cleanedJets.size()-1]=1;
+    gt->jetIso[cleanedJets.size()-1]=0;
   }
   tr->TriggerSubEvent("iso jets");
 }

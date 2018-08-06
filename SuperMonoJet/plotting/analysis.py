@@ -8,6 +8,7 @@ parser = argparse.ArgumentParser(description='plot stuff')
 parser.add_argument('--outdir',metavar='outdir',type=str,default='.')
 parser.add_argument('--cut',metavar='cut',type=str,default='1==1')
 parser.add_argument('--region',metavar='region',type=str,default=None)
+parser.add_argument('--analysis',metavar='analysis',type=str,default=None)
 parser.add_argument('--tt',metavar='tt',type=str,default='')
 parser.add_argument('--bdtcut',type=float,default=None)
 parser.add_argument('--masscut1',type=float,default=None)
@@ -26,8 +27,15 @@ import ROOT as root
 root.gROOT.SetBatch()
 from PandaCore.Tools.Misc import *
 import PandaCore.Tools.Functions
-import PandaAnalysis.SuperMonoJet.BoostedSelection as sel                            
 from PandaCore.Drawers.plot_utility import *
+import PandaAnalysis.SuperMonoJet.BoostedSelection as sel
+
+if args.analysis == "boosted":
+    import PandaAnalysis.SuperMonoJet.BoostedSelection as sel                            
+if args.analysis == "resolved":
+    import PandaAnalysis.SuperMonoJet.ResolvedSelection as sel
+if args.analysis == "monojet":
+    import PandaAnalysis.SuperMonoJet.MonojetSelection as sel
 
 ### SET GLOBAL VARIABLES ###
 if not args.fromlimit:

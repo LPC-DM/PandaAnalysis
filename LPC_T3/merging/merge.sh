@@ -1,10 +1,24 @@
 #!/bin/bash 
 
-echo MET SingleElectron TTbar ZtoNuNu ZJets WJets SingleTop QCD Diboson | xargs -n 1 -P 10 python merge.py
-#echo Diboson | xargs -n 1 -P 10 python merge.py
-#echo MET SinglePhoton SingleElectron TTbar ZJets GJets WJets SingleTop QCD Diboson TTbar_isrup TTbar_isrdown TTbar_FXFX TTbar_tuneup TTbar_tunedown | xargs -n 1 -P 10 python merge.py
-#echo MET SingleElectron SinglePhoton | xargs -n 1 -P 5 python merge.py
-#while read p; do
-#  echo $p  | xargs -n 1 -P 10 python merge.py
-#done <monoh.txt
+ANALYSIS=$1
+REGION=$2
+
+source ../lpc_setup.sh $ANALYSIS $REGION
+
+if [ "$REGION" == "met" ];then
+    echo MET TTbar ZtoNuNu ZJets WJets SingleTop QCD Diboson ZnunuH ZllH WmH WpH ttH ggH VBFH| xargs -n 1 -P 10 python merge.py
+    while read p; do                                                                                                                                                                                     
+	echo $p  | xargs -n 1 -P 10 python merge.py                                                                                                                                                    
+    done <signals.txt
+elif [ "$REGION" == "pho" ];then
+    echo SinglePhoton GJets QCD | xargs -n 1 -P 5 python merge.py 
+elif [ "$REGION" == "singleele" ];then
+    echo SingleElectron TTbar ZJets WJets SingleTop QCD Diboson ZllH WmH WpH ttH | xargs -n 1 -P 10 python merge.py
+elif [ "$REGION" == "singlemu" ];then
+    echo MET TTbar ZJets WJets SingleTop QCD Diboson ZllH WmH WpH ttH | xargs -n 1 -P 10 python merge.py
+elif [ "$REGION" == "diele" ];then
+    echo SingleElectron TTbar ZJets Diboson ZllH ttH | xargs -n 1 -P 10 python merge.py
+elif [ "$REGION" == "dimu" ];then
+    echo MET TTbar ZJets Diboson ZllH ttH | xargs -n 1 -P 10 python merge.py
+fi
 
