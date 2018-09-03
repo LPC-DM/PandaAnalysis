@@ -58,8 +58,9 @@ public :
      kDiEle      =(1<<3),
      kDiMu       =(1<<4),
      kPho        =(1<<5),
-     kLepMonoTop =(1<<6),
-     kPassTrig   =(1<<7)
+     kOpposite   =(1<<6),
+     kLepMonoTop =(1<<7),
+     kPassTrig   =(1<<8)
     };
     
     enum LepSelectionBit {

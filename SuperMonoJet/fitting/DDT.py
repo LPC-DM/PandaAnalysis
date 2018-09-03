@@ -12,7 +12,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='make forest')
 parser.add_argument('--output',metavar='output',type=str,default='')
-parser.add_argument('--input',metavar='input',type=str,default='/data/t3home000/mcremone/lpc/jorgem/skim/v_8026_0_4/monohiggs_boosted/')
+parser.add_argument('--input',metavar='input',type=str,default='')
 parser.add_argument('--process',metavar='process',type=str,default='')
 basedir = parser.parse_args().input
 foredir = parser.parse_args().output
@@ -48,7 +48,7 @@ def setlist(path,process):
 	f = []
 	if os.path.isfile(path):
 		if not "root" in path:
-			print "ERROR PLEASE INSERT A THE PATH OF A FOLDER WITH ROOT FILES OR THE PATH TO A ROOT FILE"
+			print "ERROR PLEASE INSERT PATH TO ROOT FILE"
 			sys.exit("Error message")
 		if "/" in path:	
 			f_ = path.split("/")[-1]
@@ -56,15 +56,13 @@ def setlist(path,process):
 				f_ = f_.split(".")[0]
 		f.append((f_,path))	
 	if os.path.isdir(path):
-		#print "hello"
 		lroot = os.listdir(path)
-		#print lroot
 		for lr in lroot:
+			print lr
 			if 'DDT' in lr: continue
 			if ".root" in lr:
 				f_ = lr.split(".")[0]
-				if f_==process: f.append((f_,path+'/'+lr))
-	#print f
+				f.append((f_,path+'/'+lr))
 	return f
 def outname(path):
 	if os.path.isdir(path):
@@ -79,10 +77,9 @@ def outname(path):
 	else: return sys.env('SKIM_MONOHIGGS_BOOSTED_FLATDIR'),"random"
 
 path_ = basedir
-#print path_
 if path_ :
 	Bkgs_tags = setlist(path_,process)
-#print Bkgs_tags
+
 H3={}
 
 
@@ -95,18 +92,17 @@ if  foredir == '':
 	
 for bks,B in Bkgs_tags:
 
-	print 'Starting with '+bks+'-------------------------- :)'
+	print 'Starting with '+bks
 
 	H3[bks].SetStats(0)
 	F = TFile(B)
-	#print B
 	tree = "events"
 	if "test" in B:
 		tree = "Diboson_test"
 	T = F.Get("%s"%tree)
 	#print T
 	n = T.GetEntries()
-	print n
+
 	for j in range(0, n): # Here is where we loop over all events.
 		'''
 		print  j % (1 * n/100)
@@ -116,7 +112,6 @@ for bks,B in Bkgs_tags:
 		'''
 		T.GetEntry(j)
 		weight = T.normalizedWeight*T.sf_pu*T.sf_ewkV*T.sf_qcdV
-		#weight = 1
 		PT = T.fj1Pt
 		preRHO = T.fj1MSD_corr*T.fj1MSD_corr/T.fj1Pt/T.fj1Pt
 		if preRHO > 0. and T.fj1ECFN_1_2_10 != 0.:
@@ -131,10 +126,11 @@ Fout = TFile("%s/DDT.root"%foredir, "recreate")
 Fout.cd()
 for key in H3:
 	DDT_5by6[key]=ComputeDDT('DDT_5by6', 0.6, 12, 9, H3[key])
-	#DisplayDDT(DDT_5by6[key], "DDT vals at 5%", "DDT_5by6")
+	DisplayDDT(DDT_5by6[key], "DDT vals at 5%", "DDT_5by6")
 	DDT_5by6[key].Write()
+
 	DDT_5by3[key]=ComputeDDT('DDT_5by3', 0.6, 3, 9, H3[key])
-	#DisplayDDT(DDT_5by3[key], "DDT vals at 5%", "DDT_5by3")
+	DisplayDDT(DDT_5by3[key], "DDT vals at 5%", "DDT_5by3")
 	DDT_5by3[key].Write()
 Fout.Close()
 #DDT_5by6 = ComputeDDT("DDT_5by6", 0.05, 12, 9, H3)

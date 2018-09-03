@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+x#!/usr/bin/env python
 
 from os import system,getenv
 from sys import argv
@@ -118,10 +118,20 @@ def normalPlotting(region):
     processes = []
     if 'zee' in region or 'zmm' in region:
         processes = [diboson,ttbar,zjets]
-    if 'wen'in region or 'wmn' in region or 'ten'in region or 'tmn' in region :
+        if args.analysis == "monojet": processes = [diboson,ttbar1l,ttbar2l,zjets]
+    if 'tme' in region or 'tem' in region:
+        processes = [diboson,ttbar,singletop]
+        if args.analysis == "monojet": [diboson,ttbar1,ttbar2l,singletop]
+    if 'wen'in region or 'wmn' in region:
         processes = [qcd,diboson,singletop,zjets,ttbar,wjets]
+        if args.analysis == "monojet": [qcd,diboson,singletop,zjets,ttbar1l,ttbar2l,wjets]
+
+    ### ASSIGN FILES TO PROCESSES ###
     if 'signal' in region or 'qcd' in region:
-        processes = [qcd,zjets,singletop,ttbar,diboson,wjets,znunu]
+        if args.analysis == "monojet":
+            processes = [qcd,zjets,singletop,ttbar1l,ttbar2l,diboson,wjets,znunu]
+        else:
+            processes = [qcd,zjets,singletop,ttbar,diboson,wjets,znunu]
         znunu.add_file(baseDir+'ZtoNuNu.root')
 
     zjets.add_file(baseDir+'ZJets.root')

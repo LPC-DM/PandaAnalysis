@@ -143,8 +143,9 @@ void PandaAnalyzer::JetBtagSFs()
         bool isIsoJet=false;
       
 // 
-        if (!analysis->boosted || // if we do not consider fatjets, everything is an isojet 
-            std::find(isoJets.begin(), isoJets.end(), jet) != isoJets.end()) // otherwise, explicitly check isojet
+        if (!(analysis->boosted || analysis->boson) ||// if we do not consider fatjets or resolved, everything is an isojet 
+            (analysis->boosted && std::find(isoJets.begin(), isoJets.end(), jet) != isoJets.end()) || // otherwise, explicitly check isojet
+	    (analysis->boson && DeltaR2(gt->jetEta[gt->bosonjtidx[0]],gt->jetPhi[gt->bosonjtidx[0]],jet->eta(),jet->phi())>0.16 && DeltaR2(gt->jetEta[gt->bosonjtidx[1]],gt->jetPhi[gt->bosonjtidx[1]],jet->eta(),jet->phi())>0.16))
           isIsoJet = true;
         int flavor = bCandJetGenFlavor[jet];
         // float genpt = bCandJetGenPt[jet]; // not needed right now but it's here if it becomes needed

@@ -49,6 +49,7 @@ void PandaAnalyzer::JetBasics()
   jetDown1=0; jetDown2=0;
   gt->dphipuppimet=999; gt->dphipfmet=999;
   gt->dphipuppiUW=999; gt->dphipfUW=999;
+  gt->dphipuppiUWW=999; gt->dphipfUWW=999;
   gt->dphipuppiUZ=999; gt->dphipfUZ=999;
   gt->dphipuppiUA=999; gt->dphipfUA=999;
   float maxJetEta = (analysis->vbf) ? 4.7 : 4.5;
@@ -146,11 +147,11 @@ void PandaAnalyzer::JetBasics()
         }
 
         //if (analysis->fatjet)
-        if (analysis->boosted)
+        if (analysis->boosted || analysis->boson)
           IsoJet(jet);
 
-        float csv = (fabs(jet.eta())<2.5) ? jet.csv : -1;
-        float cmva = (fabs(jet.eta())<2.5) ? jet.cmva : -1;
+        float csv = (fabs(jet.eta())<2.4) ? jet.csv : -1;
+        float cmva = (fabs(jet.eta())<2.4) ? jet.cmva : -1;
         if (fabs(jet.eta())<2.4) {
           centralJets.push_back(&jet  );
           if (centralJets.size()==1) {
@@ -187,15 +188,18 @@ void PandaAnalyzer::JetBasics()
         }
 
         // compute dphi wrt mets
+	nJetDPhi = cleanedJets.size();
         if (cleanedJets.size() <= nJetDPhi) {
           gt->dphipuppimet = std::min(fabs(vJet.DeltaPhi(vPuppiMET)),(double)gt->dphipuppimet);
           gt->dphipfmet = std::min(fabs(vJet.DeltaPhi(vPFMET)),(double)gt->dphipfmet);
           if (analysis->recoil) {
             gt->dphipuppiUA = std::min(fabs(vJet.DeltaPhi(vpuppiUA)),(double)gt->dphipuppiUA);
             gt->dphipuppiUW = std::min(fabs(vJet.DeltaPhi(vpuppiUW)),(double)gt->dphipuppiUW);
+            gt->dphipuppiUWW = std::min(fabs(vJet.DeltaPhi(vpuppiUWW)),(double)gt->dphipuppiUWW);
             gt->dphipuppiUZ = std::min(fabs(vJet.DeltaPhi(vpuppiUZ)),(double)gt->dphipuppiUZ);
             gt->dphipfUA = std::min(fabs(vJet.DeltaPhi(vpfUA)),(double)gt->dphipfUA);
             gt->dphipfUW = std::min(fabs(vJet.DeltaPhi(vpfUW)),(double)gt->dphipfUW);
+            gt->dphipfUWW = std::min(fabs(vJet.DeltaPhi(vpfUWW)),(double)gt->dphipfUWW);
             gt->dphipfUZ = std::min(fabs(vJet.DeltaPhi(vpfUZ)),(double)gt->dphipfUZ);
           }
         }
@@ -236,6 +240,10 @@ void PandaAnalyzer::JetBasics()
     case 2:
       gt->dphipuppiU = gt->dphipuppiUZ;
       gt->dphipfU = gt->dphipfUZ;
+      break;
+    case 3:
+      gt->dphipuppiU = gt->dphipuppiUWW;
+      gt->dphipfU = gt->dphipfUWW;
       break;
     default: // c'est impossible !
       break;
@@ -343,15 +351,14 @@ void PandaAnalyzer::JetVBFBasics(panda::Jet& jet)
 
 void PandaAnalyzer::IsoJet(panda::Jet& jet) 
 {
-  float maxIsoEta = (analysis->boosted) ? 4.5 : 2.5;
-  bool isIsoJet = ( (gt->nFatjet==0) || 
-      (fabs(jet.eta())<maxIsoEta 
-       && DeltaR2(gt->fj1Eta,gt->fj1Phi,jet.eta(),jet.phi())>FATJETMATCHDR2) ); 
+  float maxIsoEta = (analysis->boosted) ? 4.5 : 2.4;
+  bool isIsoJet = ( (analysis->boosted && fabs(jet.eta())<maxIsoEta && DeltaR2(gt->fj1Eta,gt->fj1Phi,jet.eta(),jet.phi())>FATJETMATCHDR2) ); 
+  //		    (analysis->boson && fabs(jet.eta())<maxIsoEta && DeltaR2(gt->jetEta[gt->bosonjtidx[0]],gt->jetPhi[gt->bosonjtidx[0]],jet.eta(),jet.phi())>NARROWJETMATCHDR2 && DeltaR2(gt->jetEta[gt->bosonjtidx[1]],gt->jetPhi[gt->bosonjtidx[1]],jet.eta(),jet.phi())>NARROWJETMATCHDR2) );
 
   if (isIsoJet) {
     isoJets.push_back(&jet);
     gt->nIsoJet++;
-    float csv = (fabs(jet.eta())<2.5) ? jet.csv : -1;
+    float csv = (fabs(jet.eta())<2.4) ? jet.csv : -1;
     if (csv>0.5426)
       ++gt->isojetNBtags;
     if (isoJets.size()==1) {
@@ -500,8 +507,8 @@ void PandaAnalyzer::JetBosonReco()
              bosonsystem = bosondaughter1 + bosondaughter2;
              double bosondr = sqrt(DeltaR2(bosondaughter1.Eta(),bosondaughter1.Phi(),bosondaughter2.Eta(),bosondaughter2.Phi()));
              double bosondphibrf = dPhiBRF(bosondaughter1, bosondaughter2, bosonsystem);
-            // if (bosonsystem.Pt()>tmp_bosonpt){
-             if (bosondphibrf>tmp_bosondphibrf){
+	     if (bosonsystem.Pt()>tmp_bosonpt){
+	       //if (bosondphibrf>tmp_bosondphibrf){
                 tmp_bosondphibrf = bosondphibrf;
                 tmp_bosoness = (bosonsystem.Pt()*bosondr)/(2*bosonsystem.M());  
                 tmp_bosondr = bosondr;

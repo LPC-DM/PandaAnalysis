@@ -415,6 +415,7 @@ void GeneralTree::Reset() {
     dphipfmet = -1;
     dphipuppimet = -1;
     dphipuppiUW = -1;
+    dphipuppiUWW = -1;
     dphipuppiUZ = -1;
     dphipuppiUA = -1;
     dphipfUW = -1;
@@ -988,6 +989,7 @@ void GeneralTree::WriteTree(TTree *t) {
   Book("pfUmag",&pfUmag,"pfUmag/F");
   Book("pfUphi",&pfUphi,"pfUphi/F");
   Book("dphipuppiUW",&dphipuppiUW,"dphipuppiUW/F");
+  Book("dphipuppiUWW",&dphipuppiUWW,"dphipuppiUWW/F");
   Book("dphipuppiUZ",&dphipuppiUZ,"dphipuppiUZ/F");
   Book("dphipuppiUA",&dphipuppiUA,"dphipuppiUA/F");
   Book("dphipfUW",&dphipfUW,"dphipfUW/F");

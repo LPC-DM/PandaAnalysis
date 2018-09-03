@@ -694,12 +694,12 @@ bool PandaAnalyzer::PassPreselection()
     return true;
   bool isGood=false;
 
-  float max_dphipuppi = std::max({gt->dphipuppimet, gt->dphipuppiUZ, gt->dphipuppiUW, gt->dphipuppiUA});
-  float max_dphipf = std::max({gt->dphipfmet, gt->dphipfUZ, gt->dphipfUW, gt->dphipfUA, gt->dphipfUW});
-  float max_puppi = std::max({gt->puppimet, gt->puppiUZmag, gt->puppiUWmag, gt->puppiUAmag});
-  float max_pf = std::max({gt->pfmet, gt->pfUZmag, gt->pfUWmag, gt->pfUAmag, gt->pfUWWmag});
-  float max_pfUp = std::max({gt->pfmetUp, gt->pfUZmagUp, gt->pfUWmagUp, gt->pfUAmagUp, gt->pfUWWmagUp});
-  float max_pfDown = std::max({gt->pfmetDown, gt->pfUZmagDown, gt->pfUWmagDown, gt->pfUAmagDown, gt->pfUWWmagDown});
+  float max_dphipuppi = std::max({gt->dphipuppimet, gt->dphipuppiUZ, gt->dphipuppiUW, gt->dphipuppiUWW, gt->dphipuppiUA});
+  float max_dphipf = std::max({gt->dphipfmet, gt->dphipfUZ, gt->dphipfUW, gt->dphipfUWW, gt->dphipfUA});
+  float max_puppi = std::max({gt->puppimet, gt->puppiUZmag, gt->puppiUWmag, gt->puppiUWWmag, gt->puppiUAmag});
+  float max_pf = std::max({gt->pfmet, gt->pfUZmag, gt->pfUWmag, gt->pfUWWmag, gt->pfUAmag});
+  float max_pfUp = std::max({gt->pfmetUp, gt->pfUZmagUp, gt->pfUWmagUp, gt->pfUWWmagUp, gt->pfUAmagUp});
+  float max_pfDown = std::max({gt->pfmetDown, gt->pfUZmagDown, gt->pfUWmagDown, gt->pfUWWmagDown, gt->pfUAmagDown});
 
   if (preselBits & kMET) {
     if ( max_pfDown>250 || max_pf>250 || max_pfUp>250 || max_puppi>250 ) {
@@ -760,6 +760,17 @@ bool PandaAnalyzer::PassPreselection()
       }
     }
   }
+
+  if (preselBits & kOpposite) {
+    if ( max_pfDown>250 || max_pf>250 || max_pfUp>250 || max_puppi>250 ) {
+      if (  max_dphipf>0.4 || max_dphipuppi>0.4) {
+	if ( gt->nLooseMuon == 1 && gt->nLooseElectron == 1 && gt->nLoosePhoton == 0 && gt->nTau == 0 ) {
+	  isGood = true;
+	}
+      }
+    }
+  }
+
 
   if (preselBits & kLepMonoTop){
     if (gt->nJet>=1 && gt->jet1Pt>25){

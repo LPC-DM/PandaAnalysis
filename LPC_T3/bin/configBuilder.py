@@ -20,10 +20,13 @@ samples = convert_catalog(list(fin),as_dict=True)
 
 fout = open(args.outfile,'w')
 keys = sorted(samples)
+#print keys
 counter=0
 for k in keys:
 	sample = samples[k]
 	configs = sample.get_config(args.nfiles,suffix='_%i')
+	if 'MET' in k or 'Znunu' in k or 'ZJets' in k or 'WJets' in k: configs = sample.get_config(args.nfiles*2,suffix='_%i')
+	if 'SingleElectron' in k: configs = sample.get_config(args.nfiles*3,suffix='_%i')
 	for c in configs:
 		fout.write(c%(counter,counter))
 		counter += 1
