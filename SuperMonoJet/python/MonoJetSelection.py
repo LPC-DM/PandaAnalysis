@@ -9,12 +9,12 @@ metFilter='metFilter==1'# && egmFilter==1'
 presel = '!(nFatjet==1 && fj1Pt>200) && jet1Pt>100 && abs(jet1Eta)<2.4 && jet1IsTight==1 && nTau==0'
 
 cuts = {
-    'signal' : tAND(metFilter,tAND(presel,'nLooseMuon==0 && nLooseElectron==0 && nLoosePhoton==0 && pfmet>250 && dphipfmet>0.5')),
-    'mn'    : tAND(metFilter,tAND(presel,'nLoosePhoton==0 && nLooseElectron==0 && nLooseMuon==1 && nTightMuon==1 && pfUWmag>250 && dphipfUW>0.5')),
-    'en'    : tAND(metFilter,tAND(presel,'nLoosePhoton==0 && nLooseMuon==0 && nLooseElectron==1 && nTightElectron==1 && pfmet>50 && pfUWmag>250 && dphipfUW>0.5')),
-    'zmm'    : tAND(metFilter,tAND(presel,'pfUZmag>250 && dphipfUZ>0.5 && nLooseElectron==0 && nLoosePhoton==0 && nLooseMuon==2 && nTightLep>0 && 60<diLepMass && diLepMass<120')),
-    'zee'    : tAND(metFilter,tAND(presel,'pfUZmag>250 && dphipfUZ>0.5 && nLoosePhoton==0 && nLooseMuon==0 && nLooseElectron==2 && nTightLep>0 && 60<diLepMass && diLepMass<120')),
-    'pho'    : tAND(metFilter,tAND(presel,'pfUAmag>250 && dphipfUA>0.5 && nLooseLep==0 && nLoosePhoton==1 && loosePho1IsTight==1 && fabs(loosePho1Eta)<1.4442')),
+    'signal' : tAND(metFilter,tAND(presel,'nLooseMuon==0 && nLooseElectron==0 && nLoosePhoton==0 && pfmet>200 && dphipfmet>0.5')),
+    'mn'    : tAND(metFilter,tAND(presel,'nLoosePhoton==0 && nLooseElectron==0 && nLooseMuon==1 && nTightMuon==1 && pfUWmag>200 && dphipfUW>0.5')),
+    'en'    : tAND(metFilter,tAND(presel,'nLoosePhoton==0 && nLooseMuon==0 && nLooseElectron==1 && nTightElectron==1 && pfmet>50 && pfUWmag>200 && dphipfUW>0.5')),
+    'zmm'    : tAND(metFilter,tAND(presel,'pfUZmag>200 && dphipfUZ>0.5 && nLooseElectron==0 && nLoosePhoton==0 && nLooseMuon==2 && nTightLep>0 && 60<diLepMass && diLepMass<120')),
+    'zee'    : tAND(metFilter,tAND(presel,'pfUZmag>200 && dphipfUZ>0.5 && nLoosePhoton==0 && nLooseMuon==0 && nLooseElectron==2 && nTightLep>0 && 60<diLepMass && diLepMass<120')),
+    'pho'    : tAND(metFilter,tAND(presel,'pfUAmag>200 && dphipfUA>0.5 && nLooseLep==0 && nLoosePhoton==1 && loosePho1IsTight==1 && fabs(loosePho1Eta)<1.4442')),
     }
 
 for r in ['signal','zmm','zee','mn','en','pho']:

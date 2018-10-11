@@ -30,7 +30,8 @@ export scratch_area="/uscms_data/d3"
 export PANDA="${CMSSW_BASE}/src/PandaAnalysis"
 
 #cfg file
-export PANDA_CFG="/uscms_data/d1/lpcmetx/catalog/20180801_${REGION}.cfg"
+#export PANDA_CFG="/uscms_data/d1/lpcmetx/catalog/20180801_${REGION}.cfg"
+export PANDA_CFG="/uscms_data/d3/lpcmetx/catalog/signals.cfg"
  
 #skim
 export SUBMIT_TMPL="skim_${ANALYSIS}_${REGION}_tmpl.py"

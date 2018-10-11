@@ -459,4 +459,3 @@ private:
 #include "TemplatedPandaAnalyzer.h"
 
 #endif
-

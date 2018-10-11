@@ -6,13 +6,7 @@ declare -A array=( [signal]=met [wmn]=singlemu [tmn]=singlemu [tme]=singlemu [we
 
 if [ $ANALYSIS != 'monojet' ]
 then
-#    for SEL in signal wmn wen tmn ten zmm zee pho
-    for SEL in ten 
-    do
-	source makeFittingForest.sh $ANALYSIS ${array[$SEL]} ${SEL}_fail
-    done
-
-    for SEL in zmm zee pho
+    for SEL in signal wmn wen tmn ten zmm zee pho
     do
 	source makeFittingForest.sh $ANALYSIS ${array[$SEL]} $SEL 
 	source makeFittingForest.sh $ANALYSIS ${array[$SEL]} ${SEL}_fail 
