@@ -9,7 +9,8 @@ from sys import argv
 import argparse
 
 parser = argparse.ArgumentParser(description='make config file')
-parser.add_argument('--catalog',type=str,default='/uscms_data/d3/lpcmetx/catalog/80x-v1')
+parser.add_argument('--catalog',type=str,default='/uscms_data/d3/lpcmetx/filelists/80X-v1-DY400to600_ext1')
+#parser.add_argument('--catalog',type=str,default='/uscms_data/d3/lpcmetx/catalog/80x-v1')
 parser.add_argument('--user_catalog', action='store_true')
 parser.add_argument('--mc_catalog',type=str,default=None)
 parser.add_argument('--data_catalog',type=str,default=None)

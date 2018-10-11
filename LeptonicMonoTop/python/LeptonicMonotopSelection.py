@@ -22,8 +22,8 @@ cuts['tee'] = tAND(nLep2,'nTightElectron==1 && nLooseElectron==2 && Sum$(jetCSV>
 cuts['tmm'] = tAND(nLep2,'nTightMuon==1 && nLooseMuon==2 && Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
 
 weights = {
-    'signale'  : '%f*sf_pu*sf_tt*normalizedWeight*sf_lepID*sf_lepIso*sf_lepTrack*sf_ewkV*sf_qcdV*sf_qcdTT*sf_btag1*sf_eleTrig',
-    'signalm'  : '%f*sf_pu*sf_tt*normalizedWeight*sf_lepID*sf_lepIso*sf_lepTrack*sf_ewkV*sf_qcdV*sf_qcdTT*sf_btag1*sf_muTrig',
+    'signale'  : '%f*sf_pu*sf_tt*normalizedWeight*sf_lepID*sf_lepIso*sf_lepTrack*sf_ewkV*sf_qcdV*sf_qcdTT*sf_eleTrig',
+    'signalm'  : '%f*sf_pu*sf_tt*normalizedWeight*sf_lepID*sf_lepIso*sf_lepTrack*sf_ewkV*sf_qcdV*sf_qcdTT*sf_muTrig',
     'control'  : '%f*sf_pu*sf_tt*normalizedWeight*sf_lepID*sf_lepIso*sf_lepTrack*sf_ewkV*sf_qcdV*sf_qcdTT',
 }
 
@@ -33,9 +33,11 @@ for x in ['wen','wmn','ten','tmn','tee','tmm']:
 	else:
           weights[x] = tTIMES(weights['control'],'sf_muTrig')
 
-for x in ['wen','wmn','ten','tmn','tee','tmm']:
-        if 'en' in x or 'mn' in x:
+for x in ['signale','signalm','wen','wmn','ten','tmn','tee','tmm']:
+        if 'wen' in x or 'wmn' in x:
           weights[x] = tTIMES(weights[x],'sf_btag0')
+	if 'e' in x or 'm' in x:
+          weights[x] = tTIMES(weights[x],'sf_btag1')
         else: 
           weights[x] = tTIMES(weights[x],'sf_btag2')
 
