@@ -21,12 +21,22 @@ parser.add_argument('--mit',type=bool,default=None)
 parser.add_argument('--test',type=bool,default=None)
 args = parser.parse_args()
 
-outpath = "/uscms_data/d3/lpcmetx/"+args.panda+"/"
+#outpath = "/uscms_data/d3/lpcmetx/filelists/"+args.panda+"/"
+outpath = "/uscms_data/d3/lpcmetx/filelists/80X-v1-test/"
 if args.test:
     outpath = "/uscms_data/d3/lpcmetx/test/"
 
 xrd = "root://cmseos.fnal.gov/" 
-inbase="/eos/uscms/store/group/lpcmetx/pandaprod/"+args.panda
+#inbase="/eos/uscms/store/group/lpcdm/noreplica/gurpinar/pandaprod/80X-v1/"
+#inbase="/eos/uscms/store/group/lpcmetx/pandaprod/"+args.panda
+#inbase="/eos/uscms/store/group/lpcmetx/pandaprod/80X-v1/"+args.panda
+#inbase="/eos/uscms/store/user/lpcdm/noreplica/ygule/pandaprod_yg/80X-v1/"+args.panda
+#inbase="/eos/uscms/store/user/sudha/"+args.panda
+#inbase="/eos/uscms/store/user/shoh/pandaprod/"+args.panda
+#inbase="/eos/uscms/store/user/lpcdm/noreplica/ygule/pandaprod_yg/80X-v1/"+args.panda
+inbase="/eos/uscms/store/group/lpcdm/noreplica/sundleeb/pandaprod/"+args.panda
+#inbase="/eos/uscms/store/group/lpcdm/noreplica/gurpinar/pandaprod/80X-v1/"+args.panda
+#inbase="/eos/uscms/store/user/dsilveri/pandaprod/"+args.panda
 if args.mit:
     xrd = "root://xrootd.cmsaf.mit.edu/"
     inbase="/store/user/paus/pandaf/009/"

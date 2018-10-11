@@ -327,6 +327,7 @@ void PandaAnalyzer::JetVBFBasics(panda::Jet& jet)
     gt->jot1Phi = jet.phi();
     if (analysis->vbf && fabs(gt->jot1Eta)<2.4) { // if it's a central jet, must pass ID requirements
       gt->jot1VBFID = jet.monojet ? 1 : 0;
+
     } else { // if leading jet is not central, leave the event be
       gt->jot1VBFID = 1;
     }
@@ -599,6 +600,7 @@ void PandaAnalyzer::JetBosonReco()
         bosondaughters_corr[i].SetPtEtaPhiM(
           gt->jetRegFac[i]*gt->jetPt[gt->bosonjtidx[i]],
           gt->jetEta[gt->bosonjtidx[i]],
+
           gt->jetPhi[gt->bosonjtidx[i]],
           cleanedJets.at(gt->bosonjtidx[i])->m()
         );
