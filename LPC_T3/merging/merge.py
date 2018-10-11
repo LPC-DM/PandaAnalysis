@@ -49,8 +49,11 @@ user = environ['USER']
 system('mkdir -p /uscmst1b_scratch/lpc1/3DayLifetime/%s/split'%user) # tmp dir
 system('mkdir -p /uscmst1b_scratch/lpc1/3DayLifetime/%s/merged'%user) # tmp dir
 
-inbase = environ['SUBMIT_OUTDIR']
-outbase = environ['PANDA_FLATDIR']
+#inbase = environ['SUBMIT_OUTDIR']
+inbase = "/eos/uscms/store/group/lpcmetx/panda/80X-v1dot1/lepmonotop/batch/"
+#outbase = environ['PANDA_FLATDIR']
+#outbase = "/uscms_data/d3/lpcmetx/panda/80X-v1dot1/lepmonotop/flat/"
+outbase = "/uscms/home/dsilveri/nobackup/PandaAnalysis_2018/CMSSW_8_0_29/src/PandaAnalysis/LPC_T3/merging/"
 
 hadd_cmd = 'hadd -k -ff -n 100 -f '
 
@@ -111,12 +114,11 @@ def merge(shortnames,mergedname):
         if 'monotop' in shortname:
             pd = shortname
             xsec = 1
-        elif 'Vector' in shortname:
+        elif 'vector' in shortname:
             tmp_ = shortname
             replacements = {
-                'Vector_MonoTop_NLO_Mphi-':'',
-                '_gSM-0p25_gDM-1p0_13TeV-madgraph':'',
-                '_Mchi-':'_',
+                'Vector_MonoTop_Leptonic_Mphi_':'',
+                '_Mchi_':'_',
                 }
             for k,v in replacements.iteritems():
                 tmp_ = tmp_.replace(k,v)
