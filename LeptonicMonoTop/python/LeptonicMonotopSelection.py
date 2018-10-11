@@ -12,14 +12,14 @@ cuts = {
     'nLep2' : tAND(presel,'nLooseLep==2 && mT>=160'),
     }
 
-cuts['signale']  = tAND('nLep_e','Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
-cuts['signalm']  = tAND('nLep_m','Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
-cuts['wen']      = tAND('nLep_e','Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==0')
-cuts['wmn']      = tAND('nLep_m','Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==0')
-cuts['ten']  = tAND('nLep_e','Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==2')
-cuts['tmn']  = tAND('nLep_m','Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==2')
-cuts['tee'] = tAND('nLep2','nTightElectron==1 && nLooseElectron==2 && Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
-cuts['tmm'] = tAND('nLep2','nTightMuon==1 && nLooseMuon==2 && Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
+cuts['signale']  = tAND(nLep_e,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
+cuts['signalm']  = tAND(nLep_m,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
+cuts['wen']      = tAND(nLep_e,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==0')
+cuts['wmn']      = tAND(nLep_m,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==0')
+cuts['ten']  = tAND(nLep_e,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==2')
+cuts['tmn']  = tAND(nLep_m,'Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==2')
+cuts['tee'] = tAND(nLep2,'nTightElectron==1 && nLooseElectron==2 && Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
+cuts['tmm'] = tAND(nLep2,'nTightMuon==1 && nLooseMuon==2 && Sum$(jetCSV>0.8 && abs(jetEta)<2.5)==1')
 
 weights = {
     'signale'  : '%f*sf_pu*sf_tt*normalizedWeight*sf_lepID*sf_lepIso*sf_lepTrack*sf_ewkV*sf_qcdV*sf_qcdTT*sf_eleTrig',
