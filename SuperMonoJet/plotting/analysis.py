@@ -46,7 +46,6 @@ if not args.fromlimit:
     cut = tAND(sel.cuts[args.region],args.cut)
 else:
     baseDir = getenv('PANDA_FLATDIR')+'/limits/'
-#    baseDir = getenv('PANDA_FLATDIR')
     dataDir = baseDir
     cut = '1==1'
 
@@ -90,7 +89,6 @@ def f(x):
 def fillProcess(region, plotFromLimits):
     region=region
     global processes
-    temp_processes = []
 
     limitLabel = None
     znunu         = Process('Z(#nu#nu)+jets',root.kZjets,'Zvv_'+region,root.kCyan-9, plotFromLimits)
@@ -100,26 +98,27 @@ def fillProcess(region, plotFromLimits):
     ttbar         = Process('t#bar{t}',root.kTTbar,'ttbar_'+region,root.kOrange-4, plotFromLimits)
     singletop     = Process('Single t',root.kST,'ST_'+region,root.kRed-9, plotFromLimits)
     qcd           = Process('QCD',root.kQCD,'QCD_'+region,root.kMagenta-10, plotFromLimits)
-    gjets         = Process('#gamma+jets',root.kGjets,None,root.kBlue, plotFromLimits)
+    gjets         = Process('#gamma+jets',root.kGjets,'Pho_'+region,root.kBlue, plotFromLimits)
     data          = Process("Data",root.kData,'Data_'+region, root.kBlack, plotFromLimits)
     signal        = Process('m_{Zp}=1.0 TeV,m_{h}=90 GeV, m_{#chi}=300 GeV',root.kSignal,None, root.kBlack, plotFromLimits)
+
+    temp_processes = [qcd,diboson,singletop,wjets,ttbar,zjets]
     
     if 'zee' in region or 'zmm' in region:
         temp_processes = [diboson,ttbar,zjets]
-        print 'adding diboson, ttbar, and zjets to temp. Temp type =',type(temp_processes)
     if 'wen' in region or 'wmn' in region:
         temp_processes = [qcd,diboson,singletop,zjets,ttbar,wjets]
     if 'signal' in region or 'qcd' in region:
         temp_processes = [qcd,zjets,singletop,ttbar,diboson,wjets,znunu]
     if not blind:
         temp_processes.append(data)
-
-    print 'Type of temp = ',type(temp_processes)
+    if 'pho' in region:
+        temp_processes = [qcd,gjets]
 
     if not plotFromLimits:
         zjets.add_file(baseDir+'ZJets.root')
         diboson.add_file(baseDir+'Diboson.root')
-        ttbar.add_file(baseDir+'TTbar%s.root'%(args.tt)); print 'TTbar%s.root'%(args.tt)
+        ttbar.add_file(baseDir+'TTbar%s.root'%(args.tt));
         singletop.add_file(baseDir+'SingleTop.root')
         wjets.add_file(baseDir+'WJets.root')
         
@@ -140,7 +139,6 @@ def fillProcess(region, plotFromLimits):
             data.additional_cut = sel.eleTrigger
             data.add_file(dataDir+'SingleElectron.root')
         elif 'pho' in region:
-            temp_processes = [qcd,gjets]
             gjets.add_file(baseDir+'GJets.root')
             qcd.add_file(baseDir+'SinglePhoton.root')
             qcd.additional_cut = sel.phoTrigger
@@ -148,9 +146,6 @@ def fillProcess(region, plotFromLimits):
             qcd.additional_weight = 'sf_phoPurity'
             data.additional_cut = sel.phoTrigger
             data.add_file(dataDir+'SinglePhoton.root')
-    print 'Type of temp = ',type(temp_processes)
-    for p in temp_processes:
-        print p.name
     processes = temp_processes
 
 def normalPlotting(region):
@@ -267,7 +262,7 @@ def fromLimit(region):
     
     system('mkdir -p %s/%s/fromLimits/%s' %(args.outdir,args.analysis,region))
     plot.draw_all(args.outdir+'/'+args.analysis+'/fromLimits/'+args.region+'/')
-
+    
 if not args.fromlimit:
     normalPlotting(region)
 else:
