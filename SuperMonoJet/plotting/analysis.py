@@ -47,7 +47,7 @@ if not args.fromlimit:
 else:
     baseDir = getenv('PANDA_FLATDIR')+'/limits/'
     dataDir = baseDir
-    cut = '1==1'
+    cut = args.cut
 
 print "PLOTTER: input directory is:", baseDir
 
@@ -163,10 +163,7 @@ def normalPlotting(region):
     for p in processes:
         plot.add_process(p)
 
-    if args.analysis == "monojet" or args.analysis == "resolved":
-        recoilBins = [250,280,310,340,370,400,430,470,510,550,590,640,690,740,790,840,900,960,1020,1090,1160,1250,1400]
-    if args.analysis == "boosted":
-        recoilBins = [250,270,350,475,1000]
+    recoilBins = [250,270,350,475,3000]
     fatjetBins = [25,75,100,150,600]
     nRecoilBins = len(recoilBins)-1
 
@@ -245,10 +242,8 @@ def fromLimit(region):
         p.additional_weight='weight'
         plot.add_process(p)
     
-    if args.analysis == "monojet" or args.analysis == "resolved":
-        recoilBins = [250,280,310,340,370,400,430,470,510,550,590,640,690,740,790,840,900,960,1020,1090,1160,1250,1400]
-    if args.analysis == "boosted":
-        recoilBins = [250,280,310,350,400,450,600,1000]
+
+    recoilBins = [250,270,350,475,3000]
     nRecoilBins = len(recoilBins)-1
     plot.add_distribution(FDistribution('fjpt',200,700,15,'fatjet p_{T} [GeV]','Events/25 GeV'))
     plot.add_distribution(FDistribution('fjmass',0,600,20,'fatjet m_{SD} [GeV]','Events'))
