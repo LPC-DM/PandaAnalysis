@@ -25,26 +25,26 @@ cuts['pho'] = tAND(baseline,'(nLooseMuon+nLooseElectron+nTau)==0 && nLoosePhoton
 
 for r in ['signal','tmn','ten','zmm','zee','wen','wmn','pho']:
 #	cuts[r] = tAND(cuts[r],'(tanh(atanh((2*jetCSV[bosonjtidx[0]])-1)+atanh((2*jetCSV[bosonjtidx[1]])-1))+1)/2>0.48') 
-        cuts[r+'_fail'] = tAND(cuts[r],'!(jetCSV[bosonjtidx[0]]>0.8484 && jetEta[bosonjtidx[0]]<2.4)||(jetCSV[bosonjtidx[1]]>0.8484 && jetEta[bosonjtidx[1]]<2.4)')
-        cuts[r] = tAND(cuts[r],'(jetCSV[bosonjtidx[0]]>0.8484 && jetEta[bosonjtidx[0]]<2.4)||(jetCSV[bosonjtidx[1]]>0.8484 && jetEta[bosonjtidx[1]]<2.4)')
+        cuts[r+'_fail'] = tAND(cuts[r],'!(jetCSV[bosonjtidx[0]]>0.8484  && jetEta[bosonjtidx[0]]<2.4)||(jetCSV[bosonjtidx[1]]>0.8484  && jetEta[bosonjtidx[1]]<2.4)')
+        cuts[r] = tAND(cuts[r],'(jetCSV[bosonjtidx[0]]>0.8484  && jetEta[bosonjtidx[0]]<2.4)||(jetCSV[bosonjtidx[1]]>0.8484  && jetEta[bosonjtidx[1]]<2.4)')
 
 for r in ['signal','zmm','zee','wen','wmn','pho','signal_fail','wmn_fail','wen_fail','zmm_fail','zee_fail','pho','pho_fail']:
 	if 'fail' in r:
-          cuts[r] = tAND(cuts[r],'Sum$(jetCSV>0.8484 && jetEta<2.4)==0')
+          cuts[r] = tAND(cuts[r],'Sum$(jetCSV>0.8484  && jetEta<2.4)==0')
 	else:
-          cuts[r] = tAND(cuts[r],'Sum$(jetCSV>0.8484 && jetEta<2.4)<3')
-#                         '(((jetCSV[bosonjtidx[0]]>0.8484 && jetEta[bosonjtidx[0]]<2.4)&&!(jetCSV[bosonjtidx[1]]>0.8484 && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484 && jetEta<2.4)==1) ||
-#                         (!(jetCSV[bosonjtidx[0]]>0.8484 && jetEta[bosonjtidx[0]]<2.4)&&(jetCSV[bosonjtidx[1]]>0.8484 && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484 && jetEta<2.4)==1) ||
-#                         ((jetCSV[bosonjtidx[0]]>0.8484 && jetEta[bosonjtidx[0]]<2.4)&&(jetCSV[bosonjtidx[1]]>0.8484 && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484 && jetEta<2.4)==2))')
+          cuts[r] = tAND(cuts[r],'Sum$(jetCSV>0.8484  && jetEta<2.4)<3')
+#                         '(((jetCSV[bosonjtidx[0]]>0.8484  && jetEta[bosonjtidx[0]]<2.4)&&!(jetCSV[bosonjtidx[1]]>0.8484  && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484  && jetEta<2.4)==1) ||
+#                         (!(jetCSV[bosonjtidx[0]]>0.8484  && jetEta[bosonjtidx[0]]<2.4)&&(jetCSV[bosonjtidx[1]]>0.8484  && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484  && jetEta<2.4)==1) ||
+#                         ((jetCSV[bosonjtidx[0]]>0.8484  && jetEta[bosonjtidx[0]]<2.4)&&(jetCSV[bosonjtidx[1]]>0.8484  && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484  && jetEta<2.4)==2))')
 
 for r in ['tmn','ten','tmn_fail','ten_fail']:
 	if 'fail' in r:
-          cuts[r] = tAND(cuts[r],'Sum$(jetCSV>0.8484 && jetEta<2.4)>0')
+          cuts[r] = tAND(cuts[r],'Sum$(jetCSV>0.8484  && jetEta<2.4)>0')
 	else:
-          cuts[r] = tAND(cuts[r],'Sum$(jetCSV>0.8484 && jetEta<2.4)>2')
-#                         '(((jetCSV[bosonjtidx[0]]>0.8484 && jetEta[bosonjtidx[0]]<2.4)&&!(jetCSV[bosonjtidx[1]]>0.8484 && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484 && jetEta<2.4)>1) ||
-#                         (!(jetCSV[bosonjtidx[0]]>0.8484 && jetEta[bosonjtidx[0]]<2.4)&&(jetCSV[bosonjtidx[1]]>0.8484 && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484 && jetEta<2.4)>1) ||
-#                         ((jetCSV[bosonjtidx[0]]>0.8484 && jetEta[bosonjtidx[0]]<2.4)&&(jetCSV[bosonjtidx[1]]>0.8484 && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484 && jetEta<2.4)>2))')
+          cuts[r] = tAND(cuts[r],'Sum$(jetCSV>0.8484  && jetEta<2.4)>2')
+#                         '(((jetCSV[bosonjtidx[0]]>0.8484  && jetEta[bosonjtidx[0]]<2.4)&&!(jetCSV[bosonjtidx[1]]>0.8484  && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484  && jetEta<2.4)>1) ||
+#                         (!(jetCSV[bosonjtidx[0]]>0.8484  && jetEta[bosonjtidx[0]]<2.4)&&(jetCSV[bosonjtidx[1]]>0.8484  && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484  && jetEta<2.4)>1) ||
+#                         ((jetCSV[bosonjtidx[0]]>0.8484  && jetEta[bosonjtidx[0]]<2.4)&&(jetCSV[bosonjtidx[1]]>0.8484  && jetEta[bosonjtidx[1]]<2.4) && Sum$(jetCSV>0.8484  && jetEta<2.4)>2))')
 
 #weights for specific regions
 weights = {
