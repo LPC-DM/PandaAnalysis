@@ -45,7 +45,8 @@ if not args.fromlimit:
     ### DEFINE REGIONS ###
     cut = tAND(sel.cuts[args.region],args.cut)
 else:
-    baseDir = getenv('PANDA_FLATDIR')+'/limits/'
+    baseDir = getenv('PANDA_FLATDIR')
+#    baseDir = getenv('PANDA_FLATDIR')+'/limits/'
     dataDir = baseDir
     cut = args.cut
 
@@ -108,8 +109,12 @@ def fillProcess(region, plotFromLimits):
         temp_processes = [diboson,ttbar,zjets]
     if 'wen' in region or 'wmn' in region:
         temp_processes = [qcd,diboson,singletop,zjets,ttbar,wjets]
-    if 'signal' in region or 'qcd' in region:
+    if 'qcd' in region:
         temp_processes = [qcd,zjets,singletop,ttbar,diboson,wjets,znunu]
+    if 'signal' in region:
+        temp_processes = [zjets,singletop,ttbar,diboson,wjets,znunu]
+    if 'ten' in region or 'tmn' in region:
+        temp_processes = [singletop,wjets,ttbar,zjets]
     if not blind:
         temp_processes.append(data)
     if 'pho' in region:
@@ -242,7 +247,6 @@ def fromLimit(region):
         p.additional_weight='weight'
         plot.add_process(p)
     
-
     recoilBins = [250,270,350,475,3000]
     nRecoilBins = len(recoilBins)-1
     plot.add_distribution(FDistribution('fjpt',200,700,15,'fatjet p_{T} [GeV]','Events/25 GeV'))
@@ -254,10 +258,10 @@ def fromLimit(region):
     plot.add_distribution(FDistribution('n2ddt53',0,0.5,10,'n2ddt53','Events'))
     recoil=VDistribution("met",recoilBins,"PF MET [GeV]","Events/GeV")
     plot.add_distribution(recoil)
-    
+
     system('mkdir -p %s/%s/fromLimits/%s' %(args.outdir,args.analysis,region))
     plot.draw_all(args.outdir+'/'+args.analysis+'/fromLimits/'+args.region+'/')
-    
+
 if not args.fromlimit:
     normalPlotting(region)
 else:
